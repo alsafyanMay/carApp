@@ -6,17 +6,31 @@
 	objectVersion = 90;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E8AEF02F3091DEEA00255D8F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AEF02C3091DEEA00255D8F /* ContentView.swift */; };
+		E8AEF0303091DEEA00255D8F /* MyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AEF02D3091DEEA00255D8F /* MyApp.swift */; };
+		E8AEF0313091DEEA00255D8F /* cartype.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AEF02B3091DEEA00255D8F /* cartype.swift */; };
+		E8AEF0323091DEEA00255D8F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E8AEF02A3091DEEA00255D8F /* Assets.xcassets */; };
+		E8AEF03A3091DF6400255D8F /* OBDService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AEF0383091DF6400255D8F /* OBDService.swift */; };
+		E8AEF03B3091DF6400255D8F /* BluetoothPopupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AEF0363091DF6400255D8F /* BluetoothPopupView.swift */; };
+		E8AEF03C3091DF6400255D8F /* BluetoothFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AEF0343091DF6400255D8F /* BluetoothFlowView.swift */; };
+		E8AEF03E3091DF6400255D8F /* VehicleModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AEF0393091DF6400255D8F /* VehicleModels.swift */; };
+		E8AEF03F3091DF6400255D8F /* BluetoothManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AEF0353091DF6400255D8F /* BluetoothManager.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* MyApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E8AEF02A3091DEEA00255D8F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		E8AEF02B3091DEEA00255D8F /* cartype.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = cartype.swift; sourceTree = "<group>"; };
+		E8AEF02C3091DEEA00255D8F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		E8AEF02D3091DEEA00255D8F /* MyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyApp.swift; sourceTree = "<group>"; };
+		E8AEF0343091DF6400255D8F /* BluetoothFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothFlowView.swift; sourceTree = "<group>"; };
+		E8AEF0353091DF6400255D8F /* BluetoothManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothManager.swift; sourceTree = "<group>"; };
+		E8AEF0363091DF6400255D8F /* BluetoothPopupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothPopupView.swift; sourceTree = "<group>"; };
+		E8AEF0373091DF6400255D8F /* MyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyApp.swift; sourceTree = "<group>"; };
+		E8AEF0383091DF6400255D8F /* OBDService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OBDService.swift; sourceTree = "<group>"; };
+		E8AEF0393091DF6400255D8F /* VehicleModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleModels.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		000000000000000000000010 /* MyApp */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = MyApp;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		000000000000000130000000 /* Frameworks */ = {
@@ -30,7 +44,7 @@
 		000000000000000000000001 = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000000010 /* MyApp */,
+				E8AEF02E3091DEEA00255D8F /* MyApp */,
 				000000000000000000000020 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +55,31 @@
 				000000000000000000000120 /* MyApp.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		E8AEF02E3091DEEA00255D8F /* MyApp */ = {
+			isa = PBXGroup;
+			children = (
+				E8AEF0333091DF2800255D8F /* Buletooth */,
+				E8AEF02A3091DEEA00255D8F /* Assets.xcassets */,
+				E8AEF02B3091DEEA00255D8F /* cartype.swift */,
+				E8AEF02C3091DEEA00255D8F /* ContentView.swift */,
+				E8AEF02D3091DEEA00255D8F /* MyApp.swift */,
+			);
+			path = MyApp;
+			sourceTree = "<group>";
+		};
+		E8AEF0333091DF2800255D8F /* Buletooth */ = {
+			isa = PBXGroup;
+			children = (
+				E8AEF0343091DF6400255D8F /* BluetoothFlowView.swift */,
+				E8AEF0353091DF6400255D8F /* BluetoothManager.swift */,
+				E8AEF0363091DF6400255D8F /* BluetoothPopupView.swift */,
+				E8AEF0373091DF6400255D8F /* MyApp.swift */,
+				E8AEF0383091DF6400255D8F /* OBDService.swift */,
+				E8AEF0393091DF6400255D8F /* VehicleModels.swift */,
+			);
+			path = Buletooth;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -55,9 +94,6 @@
 				000000000000000140000000 /* Resources */,
 			);
 			buildRules = (
-			);
-			fileSystemSynchronizedGroups = (
-				000000000000000000000010 /* MyApp */,
 			);
 			name = MyApp;
 			productName = MyApp;
@@ -102,6 +138,7 @@
 		000000000000000140000000 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
+				E8AEF0323091DEEA00255D8F /* Assets.xcassets in Resources */,
 			);
 		};
 /* End PBXResourcesBuildPhase section */
@@ -110,6 +147,14 @@
 		000000000000000120000000 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
+				E8AEF02F3091DEEA00255D8F /* ContentView.swift in Sources */,
+				E8AEF03A3091DF6400255D8F /* OBDService.swift in Sources */,
+				E8AEF03B3091DF6400255D8F /* BluetoothPopupView.swift in Sources */,
+				E8AEF03C3091DF6400255D8F /* BluetoothFlowView.swift in Sources */,
+				E8AEF03E3091DF6400255D8F /* VehicleModels.swift in Sources */,
+				E8AEF03F3091DF6400255D8F /* BluetoothManager.swift in Sources */,
+				E8AEF0303091DEEA00255D8F /* MyApp.swift in Sources */,
+				E8AEF0313091DEEA00255D8F /* cartype.swift in Sources */,
 			);
 		};
 /* End PBXSourcesBuildPhase section */
