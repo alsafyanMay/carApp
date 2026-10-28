@@ -7,16 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+<<<<<<< HEAD
 		FC3F46733091CD9A005B96C5 /* MyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC3F466D3091CD9A005B96C5 /* MyApp.swift */; };
 		FC3F46743091CD9A005B96C5 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC3F466C3091CD9A005B96C5 /* ContentView.swift */; };
 		FC3F46753091CD9A005B96C5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FC3F466B3091CD9A005B96C5 /* Assets.xcassets */; };
 		FC3F46873091CDE1005B96C5 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC3F46803091CDE1005B96C5 /* ContentView.swift */; };
 		FC3F46883091CDE1005B96C5 /* MyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC3F46813091CDE1005B96C5 /* MyApp.swift */; };
 		FC3F46893091CDE1005B96C5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FC3F467F3091CDE1005B96C5 /* Assets.xcassets */; };
+=======
+		FC3F46CB3091D8EE005B96C5 /* gidenece.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC3F46CA3091D8E5005B96C5 /* gidenece.swift */; };
+>>>>>>> 13821f463207ba9b239bd5b62a5a346664d8d8d9
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* MyApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+<<<<<<< HEAD
 		FC3F466B3091CD9A005B96C5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FC3F466C3091CD9A005B96C5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		FC3F466D3091CD9A005B96C5 /* MyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyApp.swift; sourceTree = "<group>"; };
@@ -25,6 +30,10 @@
 		FC3F46803091CDE1005B96C5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		FC3F46813091CDE1005B96C5 /* MyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyApp.swift; sourceTree = "<group>"; };
 		FC3F46833091CDE1005B96C5 /* Untitled Project 2.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "Untitled Project 2.xcodeproj"; sourceTree = "<group>"; };
+=======
+		FC3F46CA3091D8E5005B96C5 /* gidenece.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gidenece.swift; sourceTree = "<group>"; };
+		FC3F46D23091D942005B96C5 /* Gudince2 .xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "Gudince2 .xcodeproj"; sourceTree = "<group>"; };
+>>>>>>> 13821f463207ba9b239bd5b62a5a346664d8d8d9
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -48,7 +57,11 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000010 /* MyApp */,
+<<<<<<< HEAD
 				FC3F46703091CD9A005B96C5 /* Gudince2  2 */,
+=======
+				FC3F46CA3091D8E5005B96C5 /* gidenece.swift */,
+>>>>>>> 13821f463207ba9b239bd5b62a5a346664d8d8d9
 				000000000000000000000020 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -61,6 +74,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+<<<<<<< HEAD
 		FC3F466E3091CD9A005B96C5 /* Gudince2 */ = {
 			isa = PBXGroup;
 			children = (
@@ -108,6 +122,9 @@
 			sourceTree = "<group>";
 		};
 		FC3F46853091CDE1005B96C5 /* Products */ = {
+=======
+		FC3F46D33091D942005B96C5 /* Products */ = {
+>>>>>>> 13821f463207ba9b239bd5b62a5a346664d8d8d9
 			isa = PBXGroup;
 			children = (
 			);
@@ -164,12 +181,17 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
+<<<<<<< HEAD
 					ProductGroup = FC3F46713091CD9A005B96C5 /* Products */;
 					ProjectRef = FC3F466F3091CD9A005B96C5 /* Gudince2 .xcodeproj */;
 				},
 				{
 					ProductGroup = FC3F46853091CDE1005B96C5 /* Products */;
 					ProjectRef = FC3F46833091CDE1005B96C5 /* Untitled Project 2.xcodeproj */;
+=======
+					ProductGroup = FC3F46D33091D942005B96C5 /* Products */;
+					ProjectRef = FC3F46D23091D942005B96C5 /* Gudince2 .xcodeproj */;
+>>>>>>> 13821f463207ba9b239bd5b62a5a346664d8d8d9
 				},
 			);
 			projectRoot = "";
@@ -193,10 +215,14 @@
 		000000000000000120000000 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
+<<<<<<< HEAD
 				FC3F46873091CDE1005B96C5 /* ContentView.swift in Sources */,
 				FC3F46883091CDE1005B96C5 /* MyApp.swift in Sources */,
 				FC3F46733091CD9A005B96C5 /* MyApp.swift in Sources */,
 				FC3F46743091CD9A005B96C5 /* ContentView.swift in Sources */,
+=======
+				FC3F46CB3091D8EE005B96C5 /* gidenece.swift in Sources */,
+>>>>>>> 13821f463207ba9b239bd5b62a5a346664d8d8d9
 			);
 		};
 /* End PBXSourcesBuildPhase section */
