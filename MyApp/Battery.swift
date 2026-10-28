@@ -2,149 +2,255 @@
 
 // استيراد مكتبة SwiftUI
 import SwiftUI
-// مكتبة الإشعارات المحلية (يجدولها الجوال نفسه، فتشتغل بدون إنترنت)
+// مكتبة الإشعارات المحلية (يجدولها الجوال نفسه بدون نت)
 import UserNotifications
 
-// MARK: - ألوان صفحة البطارية
-// الملف هذا مستقل: كل اللي يحتاجه موجود فيه، فيشتغل لحاله حتى لو ما فيه ملفات ثانية
-// الأسماء كلها تبدأ بـ bat عشان ما تتعارض مع ألوان الملفات الثانية لو حطيتهم في نفس المشروع
-extension Color {
-    // لون خلفية الشاشة
-    static let batBackground = Color(red: 22/255, green: 29/255, blue: 26/255)
-    // لون خلفية الكروت
-    static let batCard = Color(red: 41/255, green: 46/255, blue: 43/255)
-    // أحمر غامق لحالة المنخفض
-    static let batDanger = Color(red: 130/255, green: 65/255, blue: 74/255)
-    // أخضر لحالة الطبيعي
-    static let batNormal = Color(red: 45/255, green: 100/255, blue: 70/255)
-    // برتقالي غامق لحالة الشحن الزائد
-    static let batAmber = Color(red: 150/255, green: 95/255, blue: 30/255)
-    // أحمر فاتح لنص التحذير
-    static let batWarningText = Color(red: 255/255, green: 180/255, blue: 172/255)
+// ⭐ ملاحظة: الأشياء المساعدة في هالملف (الألوان، الخطوط، الصف، المؤشر، صفحة التجربة) كلها private
+// يعني خاصة بالملف هذا بس، فالصفحات الأربع تقدر تستخدم نفس الأسماء بدون ما يصير تعارض
+
+// MARK: - الألوان (نفسها في الصفحات الأربع)
+private extension Color {
+    // خلفية الصفحة
+    static let pageBackground = Color(red: 23/255, green: 29/255, blue: 26/255)
+    // خلفية الكروت والأقسام
+    static let cardBackground = Color(red: 38/255, green: 43/255, blue: 40/255)
 }
 
-// MARK: - حالة البطارية
-// enum فيه الحالات الثلاث، وكل حالة لها نصوصها وألوانها
-enum BatteryStatus {
-    // أقل من 13.2 فولت: الدينمو ما يشحن
-    case low
-    // من 13.2 إلى 14.8 فولت: الشحن تمام
+// MARK: - درجة الحالة (تحدد كل ألوان الصفحة)
+private enum Tone {
+    // خطر (أحمر)
+    case danger
+    // تنبيه (ذهبي)
+    case warning
+    // طبيعي (أخضر)
     case normal
-    // أعلى من 14.8 فولت: شحن زائد
+    // معلومة (أزرق) — مثل المحرك البارد
+    case info
+
+    // لون أعلى الكرت الكبير
+    var cardTop: Color {
+        switch self {
+        case .danger: return Color(red: 122/255, green: 58/255, blue: 66/255)
+        case .warning: return Color(red: 122/255, green: 90/255, blue: 36/255)
+        case .normal: return Color(red: 74/255, green: 107/255, blue: 78/255)
+        case .info: return Color(red: 52/255, green: 83/255, blue: 122/255)
+        }
+    }
+
+    // لون الأزرار
+    var button: Color {
+        switch self {
+        case .danger: return Color(red: 154/255, green: 58/255, blue: 48/255)
+        case .warning: return Color(red: 168/255, green: 130/255, blue: 58/255)
+        case .normal: return Color(red: 63/255, green: 122/255, blue: 80/255)
+        case .info: return Color(red: 62/255, green: 106/255, blue: 158/255)
+        }
+    }
+
+    // لون فاتح للنصوص المهمة (نص التحذير وأرقام الخطوات)
+    var accent: Color {
+        switch self {
+        case .danger: return Color(red: 242/255, green: 167/255, blue: 167/255)
+        case .warning: return Color(red: 224/255, green: 178/255, blue: 90/255)
+        case .normal: return Color(red: 143/255, green: 209/255, blue: 158/255)
+        case .info: return Color(red: 156/255, green: 195/255, blue: 240/255)
+        }
+    }
+}
+
+// MARK: - الخطوط (نفسها في الصفحات الأربع)
+// .system يستخدم خط النظام، وأي نص عربي يطلع تلقائيًا بخط SF Arabic
+private enum AppFont {
+    static let badge = Font.system(size: 13, weight: .medium)                // الشارة
+    static let small = Font.system(size: 13, weight: .regular)               // الوقت
+    static let title = Font.system(size: 22, weight: .bold)                  // العنوان
+    static let subtitle = Font.system(size: 15, weight: .regular)            // النص تحت العنوان
+    static let value = Font.system(size: 40, weight: .bold, design: .rounded) // الرقم الكبير
+    static let unit = Font.system(size: 18, weight: .semibold)               // الوحدة جنب الرقم
+    static let gaugeLabel = Font.system(size: 11, weight: .regular)          // عناوين الشريط
+    static let warning = Font.system(size: 16, weight: .medium)              // صندوق التحذير
+    static let rowTitle = Font.system(size: 18, weight: .semibold)           // "ماذا أفعل؟"
+    static let rowBody = Font.system(size: 18, weight: .regular)             // الخطوات
+    static let stepNumber = Font.system(size: 15, weight: .bold)             // رقم الخطوة
+    static let button = Font.system(size: 17, weight: .semibold)             // الأزرار
+    static let note = Font.system(size: 15, weight: .regular)                // جملة الطمأنة
+    static let icon = Font.system(size: 60, weight: .regular)                // الأيقونة الكبيرة
+}
+
+// MARK: - حالة جهد البطارية
+// الحالات الثلاث (الداش بورد يستخدم هذا الـ enum بعد، عشان كذا مو private)
+enum BatteryStatus {
+    // أقل من 13.5 فولت: منخفض
+    case low
+    // من 13.5 إلى 14.5 فولت: طبيعي
+    case normal
+    // أعلى من 14.5 فولت: شحن زائد
     case high
 
-    // init يحدد الحالة من جهد البطارية
-    init(voltage: Double) {
-        // switch يشيك الرقم على المجالات بالترتيب
-        switch voltage {
-        // ..<13.2 يعني أي رقم أقل من 13.2
-        case ..<13.2: self = .low
-        // ...14.8 يعني أي رقم لين 14.8 (والأقل من 13.2 انمسك فوق)
-        case ...14.8: self = .normal
-        // أي شي غير كذا يعني أعلى من 14.8
+    // يحدد الحالة من القيمة
+    init(voltage value: Double) {
+        // switch يشيك المجالات بالترتيب
+        switch value {
+        case ..<13.5: self = .low
+        case ...14.5: self = .normal
         default: self = .high
         }
     }
 
-    // نص الشارة الصغيرة اللي فوق يمين الكرت
+    // نص الشارة الصغيرة
     var badgeText: String {
         switch self {
-        case .low: return "منخفض"
+        case .low: return "انتبه"
         case .normal: return "طبيعي"
-        case .high: return "مرتفع"
+        case .high: return "خطر"
         }
     }
 
     // أيقونة الشارة
     var badgeIcon: String {
         switch self {
-        case .low: return "exclamationmark.triangle"   // مثلث تحذير
-        case .normal: return "checkmark.circle"        // علامة صح
-        case .high: return "exclamationmark.triangle"  // مثلث تحذير
+        case .low: return "exclamationmark.circle"
+        case .normal: return "checkmark.circle"
+        case .high: return "exclamationmark.triangle"
+        }
+    }
+}
+
+// MARK: - محتوى كل حالة (خاص بهالملف)
+private extension BatteryStatus {
+    // درجة الحالة (تحدد الألوان)
+    var tone: Tone {
+        switch self {
+        case .low: return .warning
+        case .normal: return .normal
+        case .high: return .danger
         }
     }
 
-    // الأيقونة الكبيرة: بطارية السيارة (بأقطاب + و −)
+    // ترتيب القسم في الشريط (0 يمين، 2 يسار)
+    var index: Int {
+        switch self {
+        case .low: return 0
+        case .normal: return 1
+        case .high: return 2
+        }
+    }
+
+    // الأيقونة الكبيرة
     var icon: String {
         switch self {
-        case .low: return "minus.plus.batteryblock.exclamationmark"    // بطارية + علامة تعجب
-        case .normal: return "minus.plus.batteryblock"                 // بطارية عادية
-        case .high: return "minus.plus.batteryblock.exclamationmark"   // بطارية + علامة تعجب
+        case .low: return "minus.plus.batteryblock.exclamationmark"
+        case .normal: return "minus.plus.batteryblock"
+        case .high: return "minus.plus.batteryblock.exclamationmark"
         }
     }
 
-    // العنوان الرئيسي
+    // العنوان
     var title: String {
         switch self {
-        case .low: return "البطارية لا تُشحن"
-        case .normal: return "البطارية في الوضع الطبيعي"
-        case .high: return "شحن زائد للبطارية"
+        case .low: return "جهد البطارية منخفض"
+        case .normal: return "جهد البطارية في الوضع الطبيعي"
+        case .high: return "جهد البطارية مرتفع"
         }
     }
 
     // النص تحت العنوان
     var subtitle: String {
         switch self {
-        case .low: return "قد تتوقف السيارة عن العمل، توجّه إلى أقرب ورشة في أسرع وقت."
-        case .normal: return "الشحن يعمل بشكل سليم، تابع طريقك."
+        case .low: return "قد تتوقف السيارة عن العمل، افحص البطارية في أقرب فرصة."
+        case .normal: return "الشحن يعمل بشكل سليم."
         case .high: return "الجهد أعلى من المعدل الطبيعي، وهذا يضر بالبطارية والأجزاء الكهربائية."
         }
     }
 
-    // لون أعلى الكرت
-    var color: Color {
+    // الوقت اللي فوق يسار الكرت (نص مؤقت: لاحقًا يجي من وقت آخر قراءة)
+    var timeText: String {
         switch self {
-        case .low: return .batDanger     // أحمر
-        case .normal: return .batNormal // أخضر
-        case .high: return .batAmber  // برتقالي
+        case .low: return "خلال هذه الرحلة"
+        case .normal: return "قبل دقيقة"
+        case .high: return "خلال هذه الرحلة"
         }
     }
 
-    // نص صندوق التحذير (String? يعني ممكن يكون فاضي nil، وهنا الطبيعي ما له تحذير)
+    // نص صندوق التحذير (nil = ما فيه صندوق)
     var warning: String? {
         switch self {
-        case .low: return "لا تُطفئ السيارة إلا في مكان آمن، فقد لا تعمل مرة أخرى."
+        case .low: return "البطارية ضعيفة وقد تتوقف قريبًا."
         case .normal: return nil
         case .high: return "انتبه لأي رائحة احتراق أو سخونة في البطارية."
         }
     }
 
-    // محتوى "ماذا أفعل؟"
-    var whatToDo: String {
+    // خطوات "ماذا أفعل؟" (كل عنصر في المصفوفة = خطوة مرقّمة)
+    var whatToDo: [String] {
         switch self {
-        case .low: return "١. أطفئ المكيف والمذياع والأنوار غير الضرورية.\n٢. لا تُطفئ المحرك حتى تصل إلى وجهتك.\n٣. توجّه إلى أقرب ورشة."
-        case .normal: return "لا يلزمك فعل شيء."
-        case .high: return "١. لا تُطِل مدة القيادة.\n٢. افحص المولّد (الدينمو) في أقرب فرصة."
+        case .low: return [
+            "أطفئ المكيف والمذياع والأنوار غير الضرورية.",
+            "لا تُطفئ المحرك حتى تصل إلى وجهتك.",
+            "افحص البطارية والمولّد في أقرب ورشة."
+        ]
+        case .normal: return [
+            "لا يلزمك فعل شيء."
+        ]
+        case .high: return [
+            "لا تُطِل مدة القيادة.",
+            "افحص منظّم الجهد في المولّد في أقرب فرصة."
+        ]
         }
     }
 
-    // محتوى "ما السبب؟"
-    var reason: String {
+    // أسباب "ما السبب؟"
+    var reason: [String] {
         switch self {
-        case .low: return "غالبًا بسبب عطل في المولّد (الدينمو)، أو انقطاع سيره أو ارتخائه، أو اتساخ أطراف البطارية."
-        case .normal: return "المولّد يشحن البطارية بشكل صحيح."
-        case .high: return "غالبًا بسبب عطل في منظّم الجهد الخاص بالمولّد."
+        case .low: return [
+            "عطل في المولّد (الدينمو).",
+            "انقطاع سير المولّد أو ارتخاؤه.",
+            "اتساخ أطراف البطارية أو انتهاء عمرها."
+        ]
+        case .normal: return [
+            "المولّد يشحن البطارية بشكل صحيح."
+        ]
+        case .high: return [
+            "عطل في منظّم الجهد الخاص بالمولّد."
+        ]
+        }
+    }
+
+    // هل نعرض زر الخريطة؟
+    var showsMaps: Bool {
+        switch self {
+        case .low: return true
+        case .normal: return false
+        case .high: return true
+        }
+    }
+
+    // هل نعرض زر "ذكّرني"؟
+    var showsReminder: Bool {
+        switch self {
+        case .low: return true
+        case .normal: return false
+        case .high: return false
         }
     }
 
     // نص إشعار التذكير
     var reminderText: String {
         switch self {
-        case .low: return "لا تنسَ فحص المولّد والبطارية في الورشة."
+        case .low: return "لا تنسَ فحص البطارية والمولّد في الورشة."
         case .normal: return ""
-        case .high: return "لا تنسَ فحص منظّم الجهد في المولّد."
+        case .high: return ""
         }
     }
 }
 
-// MARK: - صفحة البطارية
+// MARK: - صفحة جهد البطارية
 struct BatteryView: View {
 
-    // جهد البطارية يجي من برا (من الصفحة اللي تفتح الشيت)
-    // = 14.3 قيمة افتراضية لو ما أرسلت شي
-    var voltage: Double = 14.3
+    // القيمة تجي من برا (من الداش بورد أو صفحة التجربة)
+    var voltage: Double = 14.0
 
-    // خاصية محسوبة: كل ما يتغير الجهد تنحسب الحالة من جديد
+    // الحالة تنحسب من القيمة كل ما تتغير
     private var status: BatteryStatus {
         BatteryStatus(voltage: voltage)
     }
@@ -154,74 +260,59 @@ struct BatteryView: View {
     // هل قسم "ما السبب؟" مفتوح
     @State private var showWhy = false
 
-    // وقت التذكير المحفوظ (بالثواني من 1970، و 0 يعني ما فيه تذكير)
-    // @AppStorage يحفظه في الجوال، فيبقى حتى لو سكّر التطبيق
+    // أداة نفتح فيها الخرائط
+    @Environment(\.openURL) private var openURL
+    // أداة نسكّر فيها الشيت (لزر "حسنًا")
+    @Environment(\.dismiss) private var dismiss
+
+    // وقت التذكير المحفوظ (0 = ما فيه تذكير)، و @AppStorage يحفظه داخل الجوال
     @AppStorage("batteryReminder") private var reminderTime: Double = 0
 
-    // أداة نفتح فيها تطبيق ثاني (قوقل ماب أو خرائط أبل)
-    @Environment(\.openURL) private var openURL
-
-
     var body: some View {
-        // ZStack: الخلفية تحت والمحتوى فوق
+        // الخلفية تحت والمحتوى فوق
         ZStack {
-            // لون الخلفية
-            Color.batBackground
-                // يغطي كل الشاشة
+            // لون الخلفية يغطي كل الشاشة
+            Color.pageBackground
                 .ignoresSafeArea()
 
-            // ScrollView عشان المحتوى ينسحب
+            // ScrollView عشان المحتوى ينسحب لو طال
             ScrollView {
-                // عمود فيه كل محتوى الصفحة
-                VStack(spacing: 20) {
+                // عمود فيه كل الصفحة
+                VStack(spacing: 16) {
                     // الكرت الكبير
                     headerCard
                         // مسافة من فوق عشان ما يلصق بالشرطة
-                        .padding(.top, 50)
-                    // لو الحالة طبيعية (أخضر): نعرض جملة الطمأنة بس، والصفحة تكون قصيرة
+                        .padding(.top, 30)
+
                     if status == .normal {
-                        // الجملة
+                        // الحالة الطبيعية: جملة الطمأنة بس، والصفحة قصيرة
                         Text("القراءة مستقرة، ونواصل مراقبتها نيابةً عنك.")
-                            // خط عادي
-                            .font(.subheadline)
-                            // لون أفتح شوي
+                            .font(AppFont.note)
                             .foregroundStyle(.white.opacity(0.9))
-                            // مسافة من فوق
-                            .padding(.top, 24)
-                            // يتلاشى لما يطلع أو يختفي
+                            .padding(.top, 20)
                             .transition(.opacity)
                     } else {
-                        // غير كذا: الصفحة كاملة (تحذير + الأقسام + زر التذكير)
+                        // غير الطبيعي: الصفحة كاملة
                         // مسافة بين الكرت والباقي
-                        Spacer().frame(height: 30)
-                        // if let: لو فيه نص تحذير (مو nil) نحطه في warningText ونعرض الصندوق
-                        if let warningText = status.warning {
-                            // صندوق التحذير
-                            warningBox(warningText)
+                        Spacer().frame(height: 16)
+                        // صندوق التحذير لو فيه نص
+                        if let warning = status.warning {
+                            warningBox(warning)
                         }
                         // "ماذا أفعل؟"
-                        BatteryExpandableRow(title: "ماذا أفعل؟", isExpanded: $showWhatToDo) {
-                            // النص حسب الحالة
-                            Text(status.whatToDo)
-                        }
+                        ExpandableRow(title: "ماذا أفعل؟", items: status.whatToDo,
+                                      accent: status.tone.accent, isExpanded: $showWhatToDo)
                         // "ما السبب؟"
-                        BatteryExpandableRow(title: "ما السبب؟", isExpanded: $showWhy) {
-                            // النص حسب الحالة
-                            Text(status.reason)
-                        }
-                        // مسافة قبل الزر
-                        Spacer().frame(height: 10)
-                        // زر "أقرب ورشة" (الأساسي)
-                        workshopButton
-                        // زر "ذكّرني" (الثانوي) يطلع بس لما يكون الجهد منخفض
-                        if status == .low {
-                            reminderButton
-                        }
+                        ExpandableRow(title: "ما السبب؟", items: status.reason,
+                                      accent: status.tone.accent, isExpanded: $showWhy)
+                        // مسافة قبل الأزرار
+                        Spacer().frame(height: 8)
+                        // الأزرار (تتغير حسب الحالة)
+                        buttons
                     }
                 }
-                // حواف من الجوانب
+                // حواف الجوانب ومن تحت
                 .padding(.horizontal, 20)
-                // حافة من تحت
                 .padding(.bottom, 30)
             }
         }
@@ -233,384 +324,339 @@ struct BatteryView: View {
         .preferredColorScheme(.dark)
     }
 
-    // MARK: - الكرت الرئيسي
+    // MARK: - الكرت الكبير
     private var headerCard: some View {
-        // عمود فيه محتوى الكرت
         VStack(spacing: 12) {
-            // السطر العلوي: الشارة + الوقت
+            // السطر الأول: الشارة يمين والوقت يسار
             HStack {
                 // الشارة
                 HStack(spacing: 6) {
-                    // أيقونة الشارة حسب الحالة
                     Image(systemName: status.badgeIcon)
-                    // نص الشارة حسب الحالة
                     Text(status.badgeText)
                 }
-                // خط صغير
-                .font(.footnote)
-                // حواف داخلية
+                .font(AppFont.badge)
                 .padding(.horizontal, 12)
-                .padding(.vertical, 4)
-                // خلفية كبسولة شفافة
-                .background(Capsule().fill(.white.opacity(0.08)))
+                .padding(.vertical, 5)
+                .background(Capsule().fill(.white.opacity(0.1)))
 
                 // يدفع الوقت لليسار
                 Spacer()
 
-                // نص الوقت
-                // (نص مؤقت: لاحقًا يجي من وقت آخر قراءة)
-                Text(status == .normal ? "قبل دقيقة" : "بدأ قبل 4 دقائق")
-                    // خط صغير
-                    .font(.footnote)
-                    // لون باهت
+                // الوقت
+                Text(status.timeText)
+                    .font(AppFont.small)
                     .foregroundStyle(.white.opacity(0.8))
             }
 
-            // الأيقونة الكبيرة حسب الحالة
+            // الأيقونة الكبيرة (تتبدل بحركة لما تتغير الحالة)
             Image(systemName: status.icon)
-                // حجم كبير
-                .font(.system(size: 64, weight: .regular))
-                // تتبدل بحركة لما تتغير
+                .font(AppFont.icon)
                 .contentTransition(.symbolEffect(.replace))
-                // مسافة من فوق
                 .padding(.top, 4)
 
-            // العنوان حسب الحالة
+            // العنوان
             Text(status.title)
-                // خط كبير وعريض
-                .font(.title2.bold())
+                .font(AppFont.title)
+                .multilineTextAlignment(.center)
 
-            // النص التوضيحي حسب الحالة (ما يطلع في الحالة الطبيعية، مثل التصميم)
+            // النص تحت العنوان (ما يطلع في الحالة الطبيعية)
             if status != .normal {
                 Text(status.subtitle)
-                    // خط متوسط
-                    .font(.subheadline)
-                    // لون أفتح شوي
+                    .font(AppFont.subtitle)
                     .foregroundStyle(.white.opacity(0.9))
-                    // بالوسط لو نزل سطرين
                     .multilineTextAlignment(.center)
             }
 
-            // رقم الجهد: %.1f يعني رقم بخانة عشرية وحدة (14.3)
-            Text("\(String(format: "%.1f", voltage)) فولت")
-                // خط كبير وعريض
-                .font(.system(size: 36, weight: .bold, design: .rounded))
-                // الأرقام تتحرك مثل العداد لما تتغير
-                .contentTransition(.numericText(value: voltage))
-                // الحركة نفسها
-                .animation(.snappy, value: voltage)
-                // مسافة من فوق
-                .padding(.top, 4)
+            // الرقم والوحدة جنب بعض (الوحدة تطلع يسار الرقم لأننا RTL)
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                // الرقم (يتحرك مثل العداد لما يتغير)
+                Text(String(format: "%.1f", voltage))
+                    .font(AppFont.value)
+                    .contentTransition(.numericText(value: voltage))
+                // الوحدة
+                Text("فولت")
+                    .font(AppFont.unit)
+                    .foregroundStyle(.white.opacity(0.8))
+            }
+            .animation(.snappy, value: voltage)
+            .padding(.top, 4)
 
-            // مؤشر الجهد
-            BatteryGauge(value: voltage, status: status)
-                // مسافة من فوق
+            // الشريط
+            StatusGauge(value: voltage, active: status.index, knobColor: status.tone.cardTop)
                 .padding(.top, 8)
         }
-        // لون النصوص أبيض
+        // كل النصوص بيضاء
         .foregroundStyle(.white)
         // حواف داخلية
         .padding(20)
-        // خلفية متدرجة من لون الحالة إلى لون الكرت
+        // خلفية متدرجة من لون الحالة إلى لون الكروت
         .background(
-            LinearGradient(
-                colors: [status.color, .batCard],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            LinearGradient(colors: [status.tone.cardTop, .cardBackground],
+                           startPoint: .top, endPoint: .bottom)
         )
         // زوايا دائرية
         .clipShape(RoundedRectangle(cornerRadius: 28))
     }
 
     // MARK: - صندوق التحذير
-    // صار دالة تستقبل النص، لأن النص يختلف حسب الحالة
     private func warningBox(_ text: String) -> some View {
-        // أيقونة + نص
         HStack(spacing: 12) {
-            // أيقونة تحذير
-            Image(systemName: "exclamationmark.octagon")
-                // حجم الأيقونة
-                .font(.title2)
-            // النص اللي جانا
+            // أيقونة "ممنوع"
+            Image(systemName: "nosign")
+                .font(.system(size: 22, weight: .regular))
+            // النص (fixedSize يخليه ينزل سطر جديد بدل ما ينقص)
             Text(text)
-                // خط عادي
-                .font(.subheadline)
+                .font(AppFont.warning)
+                .fixedSize(horizontal: false, vertical: true)
             // يملأ باقي العرض
-            Spacer()
+            Spacer(minLength: 0)
         }
-        // لون أحمر فاتح
-        .foregroundStyle(Color.batWarningText)
-        // حواف داخلية
-        .padding(.horizontal, 16)
-        // ارتفاع أقل شي 84 (ويكبر لو النص طويل)
-        .frame(minHeight: 84)
-        // الخلفية
+        // لون النص والأيقونة: الفاتح حق الحالة
+        .foregroundStyle(status.tone.accent)
+        .padding(16)
+        .frame(minHeight: 72)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                // لون الحالة شفاف
-                .fill(status.color.opacity(0.6))
-                // إطار خفيف
+                // خلفية بلون الحالة شفافة
+                .fill(status.tone.cardTop.opacity(0.35))
+                // إطار خفيف بلون الحالة
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color.batWarningText.opacity(0.25), lineWidth: 1)
+                        .stroke(status.tone.accent.opacity(0.3), lineWidth: 1)
                 )
         )
         // يتلاشى ويصغر لما يطلع أو يختفي
         .transition(.opacity.combined(with: .scale(scale: 0.95)))
     }
 
+    // MARK: - الأزرار (تتغير حسب الحالة)
+    @ViewBuilder
+    private var buttons: some View {
+        VStack(spacing: 12) {
+            // زر الخريطة
+            if status.showsMaps {
+                mapsButton
+            }
+            // زر التذكير (ثانوي)
+            if status.showsReminder {
+                reminderButton
+            }
+            // لو ما فيه زر خريطة، نعرض "حسنًا" عشان يسكّر الصفحة
+            if !status.showsMaps {
+                doneButton
+            }
+        }
+    }
+
     // MARK: - زر "أقرب ورشة"
-    // يفتح قوقل ماب ويبحث عن ورش قريبة
+    // يفتح قوقل ماب ويبحث حول موقع المستخدم
     // تطبيقنا ما يحتاج نت، لكن البحث داخل الخريطة يحتاج داتا (إلا لو الخرائط محمّلة أوفلاين)
-    private var workshopButton: some View {
+    private var mapsButton: some View {
         Button {
-            // كلمة البحث، ونحوّلها لصيغة تنفع في الرابط (عشان الحروف العربية)
+            // كلمة البحث، ونحوّل الحروف العربية لصيغة تنفع في الرابط
             let query = "ورشة سيارات".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-            // رابط تطبيق قوقل ماب
+            // رابط قوقل ماب
             let googleMaps = URL(string: "comgooglemaps://?q=\(query)")!
             // رابط خرائط أبل (احتياط لو قوقل ماب مو منزّل)
             let appleMaps = URL(string: "maps://?q=\(query)")!
-            // نحاول نفتح قوقل ماب، ولو ما انفتح (opened = false) نفتح خرائط أبل
+            // نحاول قوقل ماب، ولو ما انفتح نفتح خرائط أبل
             openURL(googleMaps) { opened in
                 if !opened { openURL(appleMaps) }
             }
         } label: {
-            // أيقونة خريطة + نص
-            HStack(spacing: 12) {
-                // أيقونة الخريطة
+            HStack(spacing: 10) {
                 Image(systemName: "map")
-                // نص الزر
                 Text("أقرب ورشة")
-                    // خط عريض
-                    .fontWeight(.semibold)
             }
-            // لون أبيض
-            .foregroundStyle(.white)
-            // كامل العرض
-            .frame(maxWidth: .infinity)
-            // ارتفاع الزر
-            .frame(height: 46)
-            // خلفية بلون الحالة
-            .background(Capsule().fill(status.color))
-            // ظل خفيف بلون الحالة
-            .shadow(color: status.color.opacity(0.5), radius: 10, y: 4)
+            .primaryButtonStyle(color: status.tone.button)
         }
     }
 
-    // MARK: - زر "ذكّرني"
+    // MARK: - زر "حسنًا"
+    private var doneButton: some View {
+        Button {
+            // نسكّر الشيت
+            dismiss()
+        } label: {
+            Text("حسنًا")
+                .primaryButtonStyle(color: status.tone.button)
+        }
+    }
+
+    // MARK: - زر "ذكّرني بالفحص"
     private var reminderButton: some View {
-        // عمود: الزر، وتحته وقت التذكير لو فيه تذكير
-        VStack(spacing: 10) {
-            // Menu: زر لما تضغطه تطلع قائمة خيارات
+        VStack(spacing: 8) {
+            // Menu: لما ينضغط تطلع قائمة خيارات
             Menu {
-                // كل خيار يحسب وقت ويرسله لـ scheduleReminder
-                // 60 × 60 = ساعة بالثواني
                 Button("بعد ساعة") { scheduleReminder(at: .now.addingTimeInterval(60 * 60)) }
-                // بكرة الساعة 9 الصبح (محسوبة تحت)
                 Button("غدًا الساعة 9 صباحًا") { scheduleReminder(at: tomorrowMorning) }
-                // 3 × 24 × 60 × 60 = 3 أيام بالثواني
                 Button("بعد 3 أيام") { scheduleReminder(at: .now.addingTimeInterval(3 * 24 * 60 * 60)) }
             } label: {
-                // شكل الزر: أيقونة جرس + نص
-                HStack(spacing: 12) {
-                    // جرس عادي لو ما فيه تذكير، وجرس مليان لو فيه
+                HStack(spacing: 10) {
+                    // جرس مليان لو فيه تذكير
                     Image(systemName: reminderDate == nil ? "bell" : "bell.fill")
-                    // النص حسب وجود تذكير
-                    Text(reminderDate == nil ? "ذكّرني" : "تغيير وقت التذكير")
-                        // خط عريض
-                        .fontWeight(.semibold)
+                    Text(reminderDate == nil ? "ذكّرني بالفحص" : "تغيير وقت التذكير")
                 }
-                // لون أبيض
-                .foregroundStyle(.white)
-                // كامل العرض
-                .frame(maxWidth: .infinity)
-                // ارتفاع الزر
-                .frame(height: 46)
-                // زر ثانوي: إطار بلون الحالة بدل خلفية مليانة (عشان ما يشبه زر الورشة)
-                .overlay(Capsule().stroke(status.color, lineWidth: 1.5))
+                .secondaryButtonStyle(color: status.tone.button)
             }
 
-            // if let: لو فيه تذكير محفوظ، نعرض وقته وزر الإلغاء
+            // لو فيه تذكير: وقته وزر الإلغاء
             if let date = reminderDate {
-                // وقت التذكير (formatted يكتب التاريخ والساعة بلغة الجوال)
                 Text("سنذكّرك: \(date.formatted(date: .abbreviated, time: .shortened))")
-                    // خط صغير
-                    .font(.footnote)
-                    // لون باهت
+                    .font(AppFont.small)
                     .foregroundStyle(.white.opacity(0.8))
-                // زر إلغاء التذكير
-                Button("إلغاء التذكير") {
-                    cancelReminder()
-                }
-                // خط صغير
-                .font(.footnote)
-                // لون أبهت
-                .foregroundStyle(.white.opacity(0.6))
+                Button("إلغاء التذكير") { cancelReminder() }
+                    .font(AppFont.small)
+                    .foregroundStyle(.white.opacity(0.6))
             }
         }
     }
 
-    // MARK: - حسابات التذكير
-    // وقت التذكير المحفوظ كتاريخ، أو nil لو ما فيه تذكير أو وقته فات
+    // وقت التذكير كتاريخ، أو nil لو ما فيه أو وقته فات
     private var reminderDate: Date? {
-        // نحوّل الرقم المحفوظ لتاريخ
         let date = Date(timeIntervalSince1970: reminderTime)
-        // لو التاريخ بالمستقبل نرجعه، غير كذا nil
         return date > .now ? date : nil
     }
 
     // بكرة الساعة 9:00 الصبح
     private var tomorrowMorning: Date {
-        // Calendar.current هو تقويم الجوال
         let calendar = Calendar.current
-        // نضيف يوم على اليوم (! يعني متأكدين إن النتيجة مو nil)
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: .now)!
-        // نخلي الساعة 9:00:00 من نفس اليوم
         return calendar.date(bySettingHour: 9, minute: 0, second: 0, of: tomorrow)!
     }
 
-    // MARK: - جدولة التذكير
+    // نجدول الإشعار (محلي: الجوال يجدوله بدون نت)
     private func scheduleReminder(at date: Date) {
-        // نحفظ وقت التذكير عشان نعرضه تحت الزر
+        // نحفظ الوقت عشان نعرضه تحت الزر
         reminderTime = date.timeIntervalSince1970
 
         // محتوى الإشعار
         let content = UNMutableNotificationContent()
-        // العنوان: نفس عنوان الحالة (مثل "البطارية لا تُشحن")
         content.title = status.title
-        // النص: رسالة التذكير الخاصة بالحالة
         content.body = status.reminderText
-        // صوت الإشعار الافتراضي
         content.sound = .default
 
-        // نفصّل التاريخ لسنة وشهر ويوم وساعة ودقيقة
+        // متى يطلع: في التاريخ المحدد، مرة وحدة
         let parts = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
-        // متى يطلع الإشعار: لما يوصل الوقت لهالتاريخ، مرة وحدة
         let trigger = UNCalendarNotificationTrigger(dateMatching: parts, repeats: false)
-        // الطلب، وله اسم ثابت عشان نقدر نلغيه أو نبدله
         let request = UNNotificationRequest(identifier: "batteryReminder", content: content, trigger: trigger)
 
-        // Task: نشغّل كود async (ينتظر رد المستخدم بدون ما يوقف الشاشة)
+        // Task: ينتظر رد المستخدم على الإذن بدون ما يوقف الشاشة
         Task {
-            // مركز الإشعارات في الجوال
             let center = UNUserNotificationCenter.current()
-            // نطلب الإذن (أول مرة بس يطلع للمستخدم سؤال)، و try? يعني لو صار خطأ نعتبره رفض
             let granted = (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
-            // لو رفض نطلع
             guard granted else { return }
-            // نشيل أي تذكير قديم لنفس الصفحة عشان ما يتكرر
+            // نشيل التذكير القديم ونحط الجديد
             center.removePendingNotificationRequests(withIdentifiers: ["batteryReminder"])
-            // نضيف التذكير الجديد
             try? await center.add(request)
         }
     }
 
-    // MARK: - إلغاء التذكير
+    // نلغي التذكير
     private func cancelReminder() {
-        // صفر = ما فيه تذكير
         reminderTime = 0
-        // نلغي الإشعار المجدول باسمه
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["batteryReminder"])
     }
-
 }
 
-// MARK: - مؤشر الجهد
-// نفس فكرة TemperatureGauge بس بأرقام البطارية
-struct BatteryGauge: View {
-    // الجهد الحالي
+// MARK: - شكل الأزرار (موحّد)
+private extension View {
+    // زر أساسي: خلفية مليانة
+    func primaryButtonStyle(color: Color) -> some View {
+        self
+            .font(AppFont.button)
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 50)
+            .background(Capsule().fill(color))
+            .shadow(color: color.opacity(0.4), radius: 10, y: 4)
+    }
+
+    // زر ثانوي: إطار بس
+    func secondaryButtonStyle(color: Color) -> some View {
+        self
+            .font(AppFont.button)
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 50)
+            .overlay(Capsule().stroke(color, lineWidth: 1.5))
+    }
+}
+
+// MARK: - الشريط
+private struct StatusGauge: View {
+    // القيمة الحالية
     let value: Double
-    // الحالة الحالية
-    let status: BatteryStatus
+    // رقم القسم الحالي (0، 1، 2) عشان نلوّنه أبيض
+    let active: Int
+    // لون الدائرة
+    let knobColor: Color
 
-    // حدود الأقسام بالفولت
-    private let minValue: Double = 12.0   // بداية الشريط
-    private let lowEnd: Double = 13.2     // نهاية المنخفض = بداية الطبيعي
-    private let normalEnd: Double = 14.8  // نهاية الطبيعي = بداية المرتفع
-    private let maxValue: Double = 16.0   // نهاية الشريط
+    // حدود الأقسام
+    private let minValue: Double = 11.5    // بداية الشريط
+    private let firstEnd: Double = 13.5     // نهاية القسم الأول
+    private let secondEnd: Double = 14.5    // نهاية القسم الثاني
+    private let maxValue: Double = 16.0    // نهاية الشريط
 
-    // عرض كل قسم كنسبة من الشريط
-    private let lowWidth: Double = 0.35     // المنخفض 35%
-    private let normalWidth: Double = 0.40  // الطبيعي 40%
-    // المرتفع ياخذ الباقي (25%)
-    private var highWidth: Double { 1 - lowWidth - normalWidth }
+    // عرض كل قسم كنسبة من الشريط (الثالث ياخذ الباقي)
+    private let firstWidth: Double = 0.45
+    private let secondWidth: Double = 0.25
+    private var thirdWidth: Double { 1 - firstWidth - secondWidth }
 
-    // مكان الدائرة من 0 إلى 1
+    // مكان الدائرة من 0 إلى 1 (كل قسم ينحسب لحاله عشان الحدود تطلع في مكانها بالضبط)
     private var progress: Double {
-        // نتأكد إن الرقم داخل حدود الشريط
         let v = min(max(value, minValue), maxValue)
-        // نشوف الرقم في أي قسم
         switch v {
-        // في المنخفض
-        case ..<lowEnd:
-            return (v - minValue) / (lowEnd - minValue) * lowWidth
-        // في الطبيعي
-        case ..<normalEnd:
-            return lowWidth + (v - lowEnd) / (normalEnd - lowEnd) * normalWidth
-        // في المرتفع
+        case ..<firstEnd:
+            return (v - minValue) / (firstEnd - minValue) * firstWidth
+        case ..<secondEnd:
+            return firstWidth + (v - firstEnd) / (secondEnd - firstEnd) * secondWidth
         default:
-            return lowWidth + normalWidth + (v - normalEnd) / (maxValue - normalEnd) * highWidth
+            return firstWidth + secondWidth + (v - secondEnd) / (maxValue - secondEnd) * thirdWidth
         }
     }
 
-    // لون القسم: أبيض لو هو الحالي، رمادي لو لا
-    private func segmentColor(for segment: BatteryStatus) -> Color {
-        segment == status ? .white : .gray.opacity(0.4)
+    // أبيض لو هو القسم الحالي، رمادي لو لا
+    private func segmentColor(_ index: Int) -> Color {
+        index == active ? .white : .gray.opacity(0.4)
     }
 
     var body: some View {
-        // الشريط فوق والعناوين تحت
         VStack(spacing: 8) {
             // نقيس العرض المتاح
             GeometryReader { geo in
-                // الدائرة فوق الشريط
+                // الدائرة فوق الشريط (leading = يمين في RTL)
                 ZStack(alignment: .leading) {
                     // 3 أقسام جنب بعض
                     HStack(spacing: 3) {
-                        // المنخفض
-                        Capsule().fill(segmentColor(for: .low))
-                            .frame(width: geo.size.width * lowWidth)
-                        // الطبيعي
-                        Capsule().fill(segmentColor(for: .normal))
-                            .frame(width: geo.size.width * normalWidth)
-                        // المرتفع (الباقي)
-                        Capsule().fill(segmentColor(for: .high))
+                        Capsule().fill(segmentColor(0))
+                            .frame(width: geo.size.width * firstWidth)
+                        Capsule().fill(segmentColor(1))
+                            .frame(width: geo.size.width * secondWidth)
+                        Capsule().fill(segmentColor(2))
                     }
-                    // ارتفاع الشريط
                     .frame(height: 6)
 
                     // الدائرة
                     Circle()
-                        // لونها حسب الحالة
-                        .fill(status.color)
-                        // إطار أبيض
+                        .fill(knobColor)
                         .overlay(Circle().stroke(.white, lineWidth: 3))
-                        // مقاسها
                         .frame(width: 18, height: 18)
-                        // مكانها حسب النسبة
                         .offset(x: progress * (geo.size.width - 18))
                 }
-                // بالنص عموديًا
                 .frame(maxHeight: .infinity)
             }
-            // ارتفاع المساحة
             .frame(height: 20)
 
             // العناوين تحت الشريط
             HStack {
-                // يمين
                 Text("منخفض")
                 Spacer()
-                // الوسط
-                Text("الطبيعي 13.2–14.8")
+                Text("الطبيعي 13.5–14.5")
                 Spacer()
-                // يسار
                 Text("مرتفع")
             }
-            // خط صغير جدًا
-            .font(.caption2)
-            // لون رمادي
+            .font(AppFont.gaugeLabel)
             .foregroundStyle(.white.opacity(0.7))
         }
         // الدائرة تتزحلق بنعومة
@@ -618,68 +664,93 @@ struct BatteryGauge: View {
     }
 }
 
-// MARK: - صف قابل للفتح والإغلاق
-// نسخة خاصة بصفحة البطارية (اسم مختلف عشان ما يتعارض مع ExpandableRow في صفحة الحرارة)
-struct BatteryExpandableRow<Content: View>: View {
-    // عنوان الصف
+// MARK: - صف ينفتح وينقفل ("ماذا أفعل؟" و "ما السبب؟")
+private struct ExpandableRow: View {
+    // العنوان
     let title: String
-    // @Binding: المتغير موجود في الصفحة الأم واحنا نقرأه ونعدّله
+    // الخطوات (كل عنصر سطر مرقّم)
+    let items: [String]
+    // لون أرقام الخطوات
+    let accent: Color
+    // مفتوح أو لا (من الصفحة الأم)
     @Binding var isExpanded: Bool
-    // المحتوى اللي يطلع لما ينفتح
-    @ViewBuilder let content: () -> Content
 
     var body: some View {
-        // العنوان فوق والمحتوى تحته
-        VStack(alignment: .leading, spacing: 12) {
-            // صف العنوان + السهم
+        VStack(alignment: .leading, spacing: 14) {
+            // العنوان والسهم
             HStack {
-                // العنوان
                 Text(title)
-                    // خط بوزن متوسط
-                    .font(.body.weight(.medium))
-                // يدفع السهم لليسار
+                    .font(AppFont.rowTitle)
                 Spacer()
-                // السهم
+                // السهم يلف لتحت لما ينفتح (90 مو -90 لأن الصفحة RTL)
                 Image(systemName: "chevron.left")
-                    // خط عريض
-                    .font(.body.weight(.semibold))
-                    // يلف لتحت لما ينفتح (90 مو -90، لأن الصفحة من اليمين لليسار فالاتجاه ينعكس)
+                    .font(.system(size: 15, weight: .semibold))
                     .rotationEffect(.degrees(isExpanded ? 90 : 0))
             }
             // كامل الصف ينضغط
             .contentShape(Rectangle())
-            // لما ينضغط
             .onTapGesture {
-                // نقلب الحالة بحركة ناعمة
                 withAnimation(.easeInOut(duration: 0.25)) {
                     isExpanded.toggle()
                 }
             }
 
-            // لو مفتوح نعرض المحتوى
+            // المحتوى لما ينفتح
             if isExpanded {
-                content()
-                    // خط أصغر
-                    .font(.subheadline)
-                    // لون أفتح شوي
-                    .foregroundStyle(.white.opacity(0.75))
-                    // يطلع بشفافية من فوق
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                VStack(alignment: .leading, spacing: 10) {
+                    // خط فاصل بين العنوان والخطوات
+                    Rectangle()
+                        .fill(.white.opacity(0.08))
+                        .frame(height: 1)
+
+                    // enumerated يعطينا رقم كل عنصر (index) مع النص (item)
+                    ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+                        // كل خطوة في مربع لحالها عشان تكون مقسّمة وواضحة
+                        HStack(alignment: .top, spacing: 12) {
+                            // رقم الخطوة داخل دائرة
+                            Text("\(index + 1)")
+                                .font(AppFont.stepNumber)
+                                .foregroundStyle(accent)
+                                .frame(width: 30, height: 30)
+                                .background(Circle().fill(accent.opacity(0.18)))
+                            // نص الخطوة (ينزل سطر جديد لو طويل)
+                            Text(item)
+                                .font(AppFont.rowBody)
+                                .foregroundStyle(.white.opacity(0.9))
+                                .lineSpacing(4)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(.top, 2)
+                            Spacer(minLength: 0)
+                        }
+                        // حواف داخلية للمربع
+                        .padding(14)
+                        // كامل العرض
+                        .frame(maxWidth: .infinity)
+                        // خلفية المربع: أفتح شوي من الكرت، بزوايا دائرية
+                        .background(
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(.white.opacity(0.05))
+                        )
+                        // خط جانبي رفيع بلون الحالة (على اليمين لأننا RTL)
+                        .overlay(alignment: .leading) {
+                            Capsule()
+                                .fill(accent.opacity(0.6))
+                                .frame(width: 3)
+                                .padding(.vertical, 10)
+                        }
+                    }
+                }
+                // يطلع بشفافية من فوق
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        // نص أبيض
         .foregroundStyle(.white)
-        // حواف داخلية
         .padding(.horizontal, 20)
-        .padding(.vertical, 22)
-        // كامل العرض
+        .padding(.vertical, 18)
         .frame(maxWidth: .infinity)
-        // الخلفية
         .background(
             RoundedRectangle(cornerRadius: 22)
-                // بلون الكروت
-                .fill(Color.batCard)
-                // إطار خفيف
+                .fill(Color.cardBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 22)
                         .stroke(.white.opacity(0.08), lineWidth: 1)
@@ -688,90 +759,49 @@ struct BatteryExpandableRow<Content: View>: View {
     }
 }
 
-// MARK: - تجربة الشيت
-// اسم مختلف عن SheetDemoView عشان ما يتعارض مع صفحة الحرارة لو كانت في نفس المشروع
-struct BatterySheetDemoView: View {
-
+// MARK: - صفحة التجربة (سلايدر + زر يفتح الصفحة كشيت)
+private struct DemoView: View {
     // هل الشيت مفتوح
     @State private var showSheet = false
-    // الجهد (هنا في الصفحة الأم، ونرسله للشيت)
-    @State private var voltage: Double = 14.3
+    // القيمة اللي نجربها
+    @State private var value: Double = 14.0
 
     var body: some View {
-        // السلايدر والزر
         VStack(spacing: 24) {
-            // الرقم الحالي
-            Text("الجهد: \(String(format: "%.1f", voltage)) فولت")
-                // خط عريض
-                .font(.title2.bold())
-
-            // سلايدر من 12 إلى 16، ويتحرك 0.1 كل مرة
-            Slider(value: $voltage, in: 12...16, step: 0.1)
-
+            // القيمة الحالية
+            Text("الجهد: \(String(format: "%.1f", value)) فولت")
+                .font(AppFont.title)
+            // السلايدر
+            Slider(value: $value, in: 11.5...16, step: 0.1)
             // زر يفتح الشيت
-            Button("افتح صفحة البطارية") {
-                // نفتح الشيت
-                showSheet = true
-            }
-            // خط عريض
-            .font(.title3.bold())
-            // حواف داخلية
-            .padding()
-            // خلفية خضراء
-            .background(Capsule().fill(Color.batNormal))
-
-            // يدفع كل شي لفوق
+            Button("افتح الصفحة") { showSheet = true }
+                .padding(.horizontal, 24)
+                .primaryButtonStyle(color: Tone.normal.button)
             Spacer()
         }
-        // حواف
         .padding(24)
-        // نص أبيض
         .foregroundStyle(.white)
-        // كامل الشاشة
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        // خلفية سوداء
         .background(Color.black)
-        // من اليمين لليسار
         .environment(\.layoutDirection, .rightToLeft)
-        // الشيت
         .sheet(isPresented: $showSheet) {
-            // نرسل الجهد للصفحة
-            BatteryView(voltage: voltage)
+            BatteryView(voltage: value)
                 // نص الشاشة وكامل الشاشة
                 .presentationDetents([.medium, .large])
                 // السحب يحرّك الشيت أول
                 .presentationContentInteraction(.resizes)
-                // تقدر تلمس السلايدر والشيت على النص
+                // تقدر تحرك السلايدر والشيت على النص
                 .presentationBackgroundInteraction(.enabled(upThrough: .medium))
-                // الشرطة الصغيرة فوق (المستخدم يسحبها لتحت عشان يسكّر)
+                // الشرطة فوق (المستخدم يسحب لتحت عشان يسكّر)
                 .presentationDragIndicator(.visible)
-                // زوايا دائرية
                 .presentationCornerRadius(40)
-                // لون الخلفية
-                .presentationBackground(Color.batBackground)
+                .presentationBackground(Color.pageBackground)
         }
     }
 }
 
 // MARK: - المعاينات
-// أسماء مختلفة عن معاينات الحرارة عشان تفرق بينهم
-
-// تجربة الشيت مع السلايدر
-#Preview("بطارية - تجربة") {
-    BatterySheetDemoView()
-}
-
-// الدينمو ما يشحن
-#Preview("بطارية - منخفض") {
-    BatteryView(voltage: 12.4)
-}
-
-// الحالة الطبيعية
-#Preview("بطارية - طبيعي") {
-    BatteryView(voltage: 14.3)
-}
-
-// شحن زائد
-#Preview("بطارية - مرتفع") {
-    BatteryView(voltage: 15.3)
-}
+#Preview("بطارية - تجربة") { DemoView() }
+#Preview("بطارية - منخفض") { BatteryView(voltage: 12.1) }
+#Preview("بطارية - طبيعي") { BatteryView(voltage: 14.0) }
+#Preview("بطارية - مرتفع") { BatteryView(voltage: 15.2) }

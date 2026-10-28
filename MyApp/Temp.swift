@@ -67,9 +67,9 @@ private enum AppFont {
     static let unit = Font.system(size: 18, weight: .semibold)               // الوحدة جنب الرقم
     static let gaugeLabel = Font.system(size: 11, weight: .regular)          // عناوين الشريط
     static let warning = Font.system(size: 16, weight: .medium)              // صندوق التحذير
-    static let rowTitle = Font.system(size: 17, weight: .semibold)           // "ماذا أفعل؟"
-    static let rowBody = Font.system(size: 16, weight: .regular)             // الخطوات
-    static let stepNumber = Font.system(size: 13, weight: .bold)             // رقم الخطوة
+    static let rowTitle = Font.system(size: 18, weight: .semibold)           // "ماذا أفعل؟"
+    static let rowBody = Font.system(size: 18, weight: .regular)             // الخطوات
+    static let stepNumber = Font.system(size: 15, weight: .bold)             // رقم الخطوة
     static let button = Font.system(size: 17, weight: .semibold)             // الأزرار
     static let note = Font.system(size: 15, weight: .regular)                // جملة الطمأنة
     static let icon = Font.system(size: 60, weight: .regular)                // الأيقونة الكبيرة
@@ -595,7 +595,7 @@ private struct ExpandableRow: View {
 
             // المحتوى لما ينفتح
             if isExpanded {
-                VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 10) {
                     // خط فاصل بين العنوان والخطوات
                     Rectangle()
                         .fill(.white.opacity(0.08))
@@ -603,12 +603,13 @@ private struct ExpandableRow: View {
 
                     // enumerated يعطينا رقم كل عنصر (index) مع النص (item)
                     ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+                        // كل خطوة في مربع لحالها عشان تكون مقسّمة وواضحة
                         HStack(alignment: .top, spacing: 12) {
                             // رقم الخطوة داخل دائرة
                             Text("\(index + 1)")
                                 .font(AppFont.stepNumber)
                                 .foregroundStyle(accent)
-                                .frame(width: 26, height: 26)
+                                .frame(width: 30, height: 30)
                                 .background(Circle().fill(accent.opacity(0.18)))
                             // نص الخطوة (ينزل سطر جديد لو طويل)
                             Text(item)
@@ -618,6 +619,22 @@ private struct ExpandableRow: View {
                                 .fixedSize(horizontal: false, vertical: true)
                                 .padding(.top, 2)
                             Spacer(minLength: 0)
+                        }
+                        // حواف داخلية للمربع
+                        .padding(14)
+                        // كامل العرض
+                        .frame(maxWidth: .infinity)
+                        // خلفية المربع: أفتح شوي من الكرت، بزوايا دائرية
+                        .background(
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(.white.opacity(0.05))
+                        )
+                        // خط جانبي رفيع بلون الحالة (على اليمين لأننا RTL)
+                        .overlay(alignment: .leading) {
+                            Capsule()
+                                .fill(accent.opacity(0.6))
+                                .frame(width: 3)
+                                .padding(.vertical, 10)
                         }
                     }
                 }

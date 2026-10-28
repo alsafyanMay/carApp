@@ -536,10 +536,3 @@ struct DashProgressBar: View {
 #Preview("داش بورد") {
     DashboardView()
 }
-//
-//  dashbord.swift
-//  MyApp
-//
-//  Created by may.mohammed on 16/05/1448 AH.
-//
-
