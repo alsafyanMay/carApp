@@ -19,7 +19,8 @@ struct coontentView: View {
             VStack(spacing:16){
                 HStack{
                     Spacer()
-                    Button("تخطي"){
+                    NavigationLink(destination: ContentView()) {
+                        Text("تخطي")
                         
                     }
                     .foregroundStyle(.white)
@@ -59,10 +60,9 @@ struct coontentView: View {
                     
                     
                     
-                    Button {
+                    NavigationLink(destination: ContentView()) {
+                        Text("ابدا")
                         
-                    } label: {
-                        Text("ابدأ")
                         
                             .font(.system(size: 20, weight: .semibold))
                             .foregroundStyle(.black)
@@ -71,21 +71,28 @@ struct coontentView: View {
                             .clipShape(Circle())
                         
                     }
-                    Spacer()
-                }
+                Spacer()
+            }
                 .padding(.horizontal, 30)
                 .padding(.bottom, 30)
                 HStack(spacing: 8) {
+                    // النقطة الأولى (تُرجعك للصفحة الأولى)
+                   
+                        Circle()
+                            .fill(Color.white)
+                            .frame(width: 8, height: 8)
                     
-                    Circle()
-                        .fill(Color.white)
-                        .frame(width: 8, height: 8)
-                    Circle()
-                        .fill(Color.gray.opacity(0.4))
-                        .frame(width: 8, height: 8)
+                    
+                    // النقطة الثانية (تنتقل للصفحة الثانية)
+                    NavigationLink(destination: splash()) {
+                        Circle()
+                            .fill(Color.gray.opacity(0.4))
+                            .frame(width: 8, height: 8)
+                    }
                 }
                 
             }
+            .navigationBarBackButtonHidden(true)
             
         }
     }
@@ -98,4 +105,3 @@ struct coontentView: View {
 #Playground {
     _ = 1 + 2
 }
-

@@ -7,13 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		FC3F46CB3091D8EE005B96C5 /* gidenece.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC3F46CA3091D8E5005B96C5 /* gidenece.swift */; };
+		FC3F46CB3091D8EE005B96C5 /* second.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC3F46CA3091D8E5005B96C5 /* second.swift */; };
+		FC3F47403091EFB7005B96C5 /* first.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC3F473F3091EFAD005B96C5 /* first.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* MyApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		FC3F46CA3091D8E5005B96C5 /* gidenece.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = gidenece.swift; sourceTree = "<group>"; };
+		FC3F46CA3091D8E5005B96C5 /* second.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = second.swift; sourceTree = "<group>"; };
 		FC3F46D23091D942005B96C5 /* Gudince2 .xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "Gudince2 .xcodeproj"; sourceTree = "<group>"; };
+		FC3F47333091EF87005B96C5 /* Gudince2 .xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "Gudince2 .xcodeproj"; sourceTree = "<group>"; };
+		FC3F473F3091EFAD005B96C5 /* first.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = first.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -37,8 +40,10 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000010 /* MyApp */,
-				FC3F46CA3091D8E5005B96C5 /* gidenece.swift */,
+				FC3F46CA3091D8E5005B96C5 /* second.swift */,
+				FC3F473F3091EFAD005B96C5 /* first.swift */,
 				000000000000000000000020 /* Products */,
+				FC3F472F3091EF87005B96C5 /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -51,6 +56,21 @@
 			sourceTree = "<group>";
 		};
 		FC3F46D33091D942005B96C5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		FC3F472F3091EF87005B96C5 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				FC3F46D23091D942005B96C5 /* Gudince2 .xcodeproj */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
+		FC3F47353091EF87005B96C5 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -107,6 +127,10 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
+					ProductGroup = FC3F47353091EF87005B96C5 /* Products */;
+					ProjectRef = FC3F47333091EF87005B96C5 /* Gudince2 .xcodeproj */;
+				},
+				{
 					ProductGroup = FC3F46D33091D942005B96C5 /* Products */;
 					ProjectRef = FC3F46D23091D942005B96C5 /* Gudince2 .xcodeproj */;
 				},
@@ -130,7 +154,8 @@
 		000000000000000120000000 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
-				FC3F46CB3091D8EE005B96C5 /* gidenece.swift in Sources */,
+				FC3F46CB3091D8EE005B96C5 /* second.swift in Sources */,
+				FC3F47403091EFB7005B96C5 /* first.swift in Sources */,
 			);
 		};
 /* End PBXSourcesBuildPhase section */
