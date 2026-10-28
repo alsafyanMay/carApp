@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E8AEF02F3091DEEA00255D8F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AEF02C3091DEEA00255D8F /* ContentView.swift */; };
 		E8AEF0303091DEEA00255D8F /* MyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AEF02D3091DEEA00255D8F /* MyApp.swift */; };
 		E8AEF0313091DEEA00255D8F /* cartype.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AEF02B3091DEEA00255D8F /* cartype.swift */; };
 		E8AEF0323091DEEA00255D8F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E8AEF02A3091DEEA00255D8F /* Assets.xcassets */; };
@@ -16,13 +15,14 @@
 		E8AEF03C3091DF6400255D8F /* BluetoothFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AEF0343091DF6400255D8F /* BluetoothFlowView.swift */; };
 		E8AEF03E3091DF6400255D8F /* VehicleModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AEF0393091DF6400255D8F /* VehicleModels.swift */; };
 		E8AEF03F3091DF6400255D8F /* BluetoothManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AEF0353091DF6400255D8F /* BluetoothManager.swift */; };
+		FC3F46CB3091D8EE005B96C5 /* second.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC3F46CA3091D8E5005B96C5 /* second.swift */; };
+		FC3F47403091EFB7005B96C5 /* first.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC3F473F3091EFAD005B96C5 /* first.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* MyApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E8AEF02A3091DEEA00255D8F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E8AEF02B3091DEEA00255D8F /* cartype.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = cartype.swift; sourceTree = "<group>"; };
-		E8AEF02C3091DEEA00255D8F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		E8AEF02D3091DEEA00255D8F /* MyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyApp.swift; sourceTree = "<group>"; };
 		E8AEF0343091DF6400255D8F /* BluetoothFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothFlowView.swift; sourceTree = "<group>"; };
 		E8AEF0353091DF6400255D8F /* BluetoothManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothManager.swift; sourceTree = "<group>"; };
@@ -30,6 +30,8 @@
 		E8AEF0373091DF6400255D8F /* MyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyApp.swift; sourceTree = "<group>"; };
 		E8AEF0383091DF6400255D8F /* OBDService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OBDService.swift; sourceTree = "<group>"; };
 		E8AEF0393091DF6400255D8F /* VehicleModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleModels.swift; sourceTree = "<group>"; };
+		FC3F46CA3091D8E5005B96C5 /* second.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = second.swift; sourceTree = "<group>"; };
+		FC3F473F3091EFAD005B96C5 /* first.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = first.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,6 +47,8 @@
 			isa = PBXGroup;
 			children = (
 				E8AEF02E3091DEEA00255D8F /* MyApp */,
+				FC3F46CA3091D8E5005B96C5 /* second.swift */,
+				FC3F473F3091EFAD005B96C5 /* first.swift */,
 				000000000000000000000020 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -63,7 +67,6 @@
 				E8AEF0333091DF2800255D8F /* Buletooth */,
 				E8AEF02A3091DEEA00255D8F /* Assets.xcassets */,
 				E8AEF02B3091DEEA00255D8F /* cartype.swift */,
-				E8AEF02C3091DEEA00255D8F /* ContentView.swift */,
 				E8AEF02D3091DEEA00255D8F /* MyApp.swift */,
 			);
 			path = MyApp;
@@ -147,7 +150,6 @@
 		000000000000000120000000 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
-				E8AEF02F3091DEEA00255D8F /* ContentView.swift in Sources */,
 				E8AEF03A3091DF6400255D8F /* OBDService.swift in Sources */,
 				E8AEF03B3091DF6400255D8F /* BluetoothPopupView.swift in Sources */,
 				E8AEF03C3091DF6400255D8F /* BluetoothFlowView.swift in Sources */,
@@ -155,6 +157,8 @@
 				E8AEF03F3091DF6400255D8F /* BluetoothManager.swift in Sources */,
 				E8AEF0303091DEEA00255D8F /* MyApp.swift in Sources */,
 				E8AEF0313091DEEA00255D8F /* cartype.swift in Sources */,
+				FC3F46CB3091D8EE005B96C5 /* second.swift in Sources */,
+				FC3F47403091EFB7005B96C5 /* first.swift in Sources */,
 			);
 		};
 /* End PBXSourcesBuildPhase section */
