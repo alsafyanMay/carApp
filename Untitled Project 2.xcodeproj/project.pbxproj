@@ -6,8 +6,25 @@
 	objectVersion = 90;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		FC3F46733091CD9A005B96C5 /* MyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC3F466D3091CD9A005B96C5 /* MyApp.swift */; };
+		FC3F46743091CD9A005B96C5 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC3F466C3091CD9A005B96C5 /* ContentView.swift */; };
+		FC3F46753091CD9A005B96C5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FC3F466B3091CD9A005B96C5 /* Assets.xcassets */; };
+		FC3F46873091CDE1005B96C5 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC3F46803091CDE1005B96C5 /* ContentView.swift */; };
+		FC3F46883091CDE1005B96C5 /* MyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC3F46813091CDE1005B96C5 /* MyApp.swift */; };
+		FC3F46893091CDE1005B96C5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FC3F467F3091CDE1005B96C5 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* MyApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FC3F466B3091CD9A005B96C5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FC3F466C3091CD9A005B96C5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		FC3F466D3091CD9A005B96C5 /* MyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyApp.swift; sourceTree = "<group>"; };
+		FC3F466F3091CD9A005B96C5 /* Gudince2 .xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "Gudince2 .xcodeproj"; sourceTree = "<group>"; };
+		FC3F467F3091CDE1005B96C5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FC3F46803091CDE1005B96C5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		FC3F46813091CDE1005B96C5 /* MyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyApp.swift; sourceTree = "<group>"; };
+		FC3F46833091CDE1005B96C5 /* Untitled Project 2.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "Untitled Project 2.xcodeproj"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -31,6 +48,7 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000010 /* MyApp */,
+				FC3F46703091CD9A005B96C5 /* Gudince2  2 */,
 				000000000000000000000020 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -39,6 +57,59 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000120 /* MyApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		FC3F466E3091CD9A005B96C5 /* Gudince2 */ = {
+			isa = PBXGroup;
+			children = (
+				FC3F466B3091CD9A005B96C5 /* Assets.xcassets */,
+				FC3F466C3091CD9A005B96C5 /* ContentView.swift */,
+				FC3F466D3091CD9A005B96C5 /* MyApp.swift */,
+			);
+			path = Gudince2;
+			sourceTree = "<group>";
+		};
+		FC3F46703091CD9A005B96C5 /* Gudince2  2 */ = {
+			isa = PBXGroup;
+			children = (
+				FC3F46843091CDE1005B96C5 /* Untitled Project 2 */,
+				FC3F466E3091CD9A005B96C5 /* Gudince2 */,
+				FC3F466F3091CD9A005B96C5 /* Gudince2 .xcodeproj */,
+			);
+			path = "Gudince2  2";
+			sourceTree = "<group>";
+		};
+		FC3F46713091CD9A005B96C5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		FC3F46823091CDE1005B96C5 /* Guidance page */ = {
+			isa = PBXGroup;
+			children = (
+				FC3F467F3091CDE1005B96C5 /* Assets.xcassets */,
+				FC3F46803091CDE1005B96C5 /* ContentView.swift */,
+				FC3F46813091CDE1005B96C5 /* MyApp.swift */,
+			);
+			path = "Guidance page";
+			sourceTree = "<group>";
+		};
+		FC3F46843091CDE1005B96C5 /* Untitled Project 2 */ = {
+			isa = PBXGroup;
+			children = (
+				FC3F46823091CDE1005B96C5 /* Guidance page */,
+				FC3F46833091CDE1005B96C5 /* Untitled Project 2.xcodeproj */,
+			);
+			path = "Untitled Project 2";
+			sourceTree = "<group>";
+		};
+		FC3F46853091CDE1005B96C5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -91,6 +162,16 @@
 			preferredProjectObjectVersion = 90;
 			productRefGroup = 000000000000000000000020 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = FC3F46713091CD9A005B96C5 /* Products */;
+					ProjectRef = FC3F466F3091CD9A005B96C5 /* Gudince2 .xcodeproj */;
+				},
+				{
+					ProductGroup = FC3F46853091CDE1005B96C5 /* Products */;
+					ProjectRef = FC3F46833091CDE1005B96C5 /* Untitled Project 2.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				000000000000000100000000 /* MyApp */,
@@ -102,6 +183,8 @@
 		000000000000000140000000 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
+				FC3F46753091CD9A005B96C5 /* Assets.xcassets in Resources */,
+				FC3F46893091CDE1005B96C5 /* Assets.xcassets in Resources */,
 			);
 		};
 /* End PBXResourcesBuildPhase section */
@@ -110,6 +193,10 @@
 		000000000000000120000000 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
+				FC3F46873091CDE1005B96C5 /* ContentView.swift in Sources */,
+				FC3F46883091CDE1005B96C5 /* MyApp.swift in Sources */,
+				FC3F46733091CD9A005B96C5 /* MyApp.swift in Sources */,
+				FC3F46743091CD9A005B96C5 /* ContentView.swift in Sources */,
 			);
 		};
 /* End PBXSourcesBuildPhase section */
