@@ -4,8 +4,8 @@
 import SwiftUI
 
 // ⚠️ هذي الصفحة تفتح صفحاتك الأربع، فلازم يكونون في نفس المشروع:
-// EngineTempView.swift و BatteryView.swift و FuelView.swift و RPMView.swift
-// وتستخدم الحالات اللي فيهم (TempStatus و BatteryStatus و FuelStatus و RPMStatus)
+// EngineTempView.swift و BatteryView.swift و FuelView.swift
+// وتستخدم الحالات اللي فيهم (TempStatus و BatteryStatus و FuelStatus)
 // (مبدئيًا بدون ربط مع الـ OBD: القيم ثابتة تحت في @State)
 
 // MARK: - ألوان الداش بورد
@@ -58,7 +58,7 @@ enum DashTone {
 // MARK: - أي صفحة مفتوحة
 // enum يحدد أي صفحة نفتحها كشيت (Identifiable مطلوب لـ .sheet(item:))
 enum DashSheet: Identifiable {
-    case temperature, battery, fuel, rpm
+    case temperature, battery, fuel
     // كل حالة هي نفسها الـ id
     var id: Self { self }
 }
@@ -71,7 +71,6 @@ struct DashboardView: View {
     @State private var coolantTemp: Double = 118     // حرارة المحرك
     @State private var fuelLevel: Double = 20        // نسبة الوقود
     @State private var batteryVoltage: Double = 14.0 // جهد البطارية
-    @State private var rpm: Double = 2200            // دوران المحرك
 
     // الصفحة المفتوحة حاليًا (nil = ما فيه شي مفتوح)
     @State private var activeSheet: DashSheet?
@@ -80,7 +79,6 @@ struct DashboardView: View {
     private var tempStatus: TempStatus { TempStatus(temperature: coolantTemp) }
     private var batteryStatus: BatteryStatus { BatteryStatus(voltage: batteryVoltage) }
     private var fuelStatus: FuelStatus { FuelStatus(level: fuelLevel) }
-    private var rpmStatus: RPMStatus { RPMStatus(rpm: rpm) }
 
     // MARK: درجة الخطورة لكل قياس
     private var tempTone: DashTone {
@@ -104,14 +102,6 @@ struct DashboardView: View {
         case .normal: return .normal   // كافي → أخضر
         }
     }
-    private var rpmTone: DashTone {
-        switch rpmStatus {
-        case .low: return .warning     // يهتز → ذهبي
-        case .normal: return .normal   // طبيعي → أخضر
-        case .high: return .danger     // قريب من الحد الأحمر → أحمر
-        }
-    }
-
     // MARK: الرسالة اللي في أسفل الكروت العريضة
     private var tempMessage: String {
         switch tempStatus {
@@ -120,14 +110,6 @@ struct DashboardView: View {
         case .high: return "توقّف في مكان آمن وأطفئ المحرك"
         }
     }
-    private var rpmMessage: String {
-        switch rpmStatus {
-        case .low: return "المحرك يهتز وقد يتوقف عن العمل"
-        case .normal: return "دوران المحرك ضمن المعدل الطبيعي"
-        case .high: return "خفّف الضغط على دواسة الوقود"
-        }
-    }
-
     var body: some View {
         // ZStack: الخلفية تحت والمحتوى فوق
         ZStack {
@@ -212,22 +194,6 @@ struct DashboardView: View {
                     // مسافة من فوق
                     .padding(.top, 16)
 
-                    // 3️⃣ كرت الدوران العريض (الجديد)
-                    Button { activeSheet = .rpm } label: {
-                        DashWideCard(
-                            icon: "gauge.with.dots.needle.50percent",       // أيقونة العداد
-                            title: "دوران المحرك",                          // العنوان
-                            value: "\(Int(rpm))",      // الرقم
-                            unit: "RPM",                                    // الوحدة
-                            badgeText: rpmStatus.badgeText,  // الشارة
-                            badgeIcon: rpmStatus.badgeIcon,                 // أيقونة الشارة
-                            message: rpmMessage,                            // الرسالة تحت
-                            tone: rpmTone                                   // اللون
-                        )
-                    }
-                    // مسافة من فوق
-                    .padding(.top, 16)
-
                     // الجملة اللي في آخر الصفحة
                     Text("- رحلتك أكثر أمانًا -")
                         // خط صغير وعريض
@@ -256,7 +222,6 @@ struct DashboardView: View {
                 case .temperature: EngineTempView(temperature: coolantTemp)
                 case .battery: BatteryView(voltage: batteryVoltage)
                 case .fuel: FuelView(level: fuelLevel)
-                case .rpm: RPMView(rpm: rpm)
                 }
             }
             // نص الشاشة وكامل الشاشة
@@ -273,7 +238,7 @@ struct DashboardView: View {
     }
 }
 
-// MARK: - الكرت العريض (الحرارة والدوران)
+// MARK: - الكرت العريض (الحرارة)
 struct DashWideCard: View {
     let icon: String        // أيقونة SF Symbol
     let title: String       // العنوان
