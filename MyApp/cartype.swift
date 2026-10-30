@@ -14,6 +14,8 @@ struct ContentView: View {
     @StateObject private var obdService: OBDService
     @State private var selectedBrand: String?
     @State private var savedVehicle = SavedVehicle.load()
+    // هل الداش بورد ظاهر؟ (يصير true بعد ما ينجح الاتصال)
+      @State private var showDashboard = false
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
@@ -70,19 +72,33 @@ struct ContentView: View {
                         savedVehicle = SavedVehicle.load()
                         selectedBrand = nil
                         // Dashboard file is not supplied. Replace this callback with its route.
+                        showDashboard = true
                         // The success popup must never imply that a missing dashboard exists.
                     }
                 )
             }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .background {
-                obdService.stopSession()
-                bluetoothManager.disconnect()
-            }
+                    if phase == .background {
+                        obdService.stopSession()
+                        bluetoothManager.disconnect()
+                    }
+                }
+                .environment(\.layoutDirection, .rightToLeft)
+                // الداش بورد يغطي الشاشة كاملة بعد الاتصال
+        // الداش بورد يغطي الشاشة كاملة بعد الاتصال
+        .fullScreenCover(isPresented: $showDashboard) {
+            // نرسل القراءات الحية من جهاز الـ OBD
+            DashboardView(
+                coolantTemp: obdService.vehicleData.coolantTemperature,
+                fuelLevel: obdService.vehicleData.fuelLevel,
+                batteryVoltage: obdService.vehicleData.batteryVoltage,
+                isConnected: obdService.state == .ready,
+                // إعادة الاتصال: نرجع لصفحة اختيار السيارة
+                onReconnect: { showDashboard = false }
+            )
         }
-        .environment(\.layoutDirection, .rightToLeft)
-    }
+            }
 
     private var brandSelection: some View {
             VStack(alignment: .leading, spacing: 0) {
