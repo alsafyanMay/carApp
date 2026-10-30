@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E21ECD713093B01300CFA524 /* Battery.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21ECD703093B01300CFA524 /* Battery.swift */; };
+		E21ECD743093B02C00CFA524 /* dashbord.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21ECD723093B02C00CFA524 /* dashbord.swift */; };
+		E21ECD753093B02C00CFA524 /* fuel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21ECD733093B02C00CFA524 /* fuel.swift */; };
+		E21ECD773093B03900CFA524 /* Temp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21ECD763093B03900CFA524 /* Temp.swift */; };
 		E8AEF0303091DEEA00255D8F /* MyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AEF02D3091DEEA00255D8F /* MyApp.swift */; };
 		E8AEF0313091DEEA00255D8F /* cartype.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AEF02B3091DEEA00255D8F /* cartype.swift */; };
 		E8AEF0323091DEEA00255D8F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E8AEF02A3091DEEA00255D8F /* Assets.xcassets */; };
@@ -21,6 +25,10 @@
 
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* MyApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E21ECD703093B01300CFA524 /* Battery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Battery.swift; sourceTree = "<group>"; };
+		E21ECD723093B02C00CFA524 /* dashbord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = dashbord.swift; sourceTree = "<group>"; };
+		E21ECD733093B02C00CFA524 /* fuel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = fuel.swift; sourceTree = "<group>"; };
+		E21ECD763093B03900CFA524 /* Temp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Temp.swift; sourceTree = "<group>"; };
 		E8AEF02A3091DEEA00255D8F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E8AEF02B3091DEEA00255D8F /* cartype.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = cartype.swift; sourceTree = "<group>"; };
 		E8AEF02D3091DEEA00255D8F /* MyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyApp.swift; sourceTree = "<group>"; };
@@ -64,6 +72,10 @@
 		E8AEF02E3091DEEA00255D8F /* MyApp */ = {
 			isa = PBXGroup;
 			children = (
+				E21ECD763093B03900CFA524 /* Temp.swift */,
+				E21ECD723093B02C00CFA524 /* dashbord.swift */,
+				E21ECD733093B02C00CFA524 /* fuel.swift */,
+				E21ECD703093B01300CFA524 /* Battery.swift */,
 				E8AEF0333091DF2800255D8F /* Buletooth */,
 				E8AEF02A3091DEEA00255D8F /* Assets.xcassets */,
 				E8AEF02B3091DEEA00255D8F /* cartype.swift */,
@@ -152,11 +164,15 @@
 			files = (
 				E8AEF03A3091DF6400255D8F /* OBDService.swift in Sources */,
 				E8AEF03B3091DF6400255D8F /* BluetoothPopupView.swift in Sources */,
+				E21ECD743093B02C00CFA524 /* dashbord.swift in Sources */,
+				E21ECD753093B02C00CFA524 /* fuel.swift in Sources */,
 				E8AEF03C3091DF6400255D8F /* BluetoothFlowView.swift in Sources */,
 				E8AEF03E3091DF6400255D8F /* VehicleModels.swift in Sources */,
 				E8AEF03F3091DF6400255D8F /* BluetoothManager.swift in Sources */,
+				E21ECD713093B01300CFA524 /* Battery.swift in Sources */,
 				E8AEF0303091DEEA00255D8F /* MyApp.swift in Sources */,
 				E8AEF0313091DEEA00255D8F /* cartype.swift in Sources */,
+				E21ECD773093B03900CFA524 /* Temp.swift in Sources */,
 				FC3F46CB3091D8EE005B96C5 /* second.swift in Sources */,
 				FC3F47403091EFB7005B96C5 /* first.swift in Sources */,
 			);
