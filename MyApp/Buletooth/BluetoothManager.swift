@@ -45,10 +45,9 @@ final class BluetoothManager: NSObject, ObservableObject {
     private func scan() {
         guard let centralManager, centralManager.state == .poweredOn else { return }
         state = .scanning
-        // The service is shared by other BLE products; a name/service match alone
-        // does not prove that a device is an OBD adapter. OBDService verifies it.
-        centralManager.scanForPeripherals(withServices: [serviceUUID], options: nil)
-        setTimeout(seconds: 12) { manager in
+        // مسح عام دون حصر على UUID الإعلان، لأن أغلب أجهزة OBD لا تضع الخدمة في حزمة الإعلان
+        centralManager.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: false])
+        setTimeout(seconds: 15) { manager in
             manager.centralManager?.stopScan()
             manager.wantsScan = false
             manager.state = .scanFinished
@@ -56,6 +55,15 @@ final class BluetoothManager: NSObject, ObservableObject {
     }
 
     func connect(deviceID: UUID) {
+        #if targetEnvironment(simulator)
+        state = .connecting
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(800))
+            self?.connectedDeviceName = "LELink LSB2 (محاكاة)"
+            self?.connectedDeviceID = deviceID
+            self?.state = .connected
+        }
+        #else
         guard let target = peripherals[deviceID] else {
             fail("لم يعد الجهاز متاحًا. ابحث عنه مرة أخرى.")
             return
@@ -70,6 +78,7 @@ final class BluetoothManager: NSObject, ObservableObject {
         setTimeout(seconds: 20) { manager in
             manager.fail("انتهت مهلة الاتصال بالجهاز. تأكد أنه قريب وغير مستخدم في تطبيق آخر.")
         }
+        #endif
     }
 
     // MARK: - Read-only OBD Transport
@@ -124,7 +133,14 @@ final class BluetoothManager: NSObject, ObservableObject {
             disconnect()
             state = .permissionDenied
         case .unsupported:
+            #if targetEnvironment(simulator)
+            state = .scanning
+            let mockID = UUID()
+            let mockDevice = OBDDevice(id: mockID, name: "LELink LSB2 (محاكاة)", signalStrength: -45)
+            devices = [mockDevice]
+            #else
             fail("هذا الجهاز لا يدعم اتصال البلوتوث المطلوب.")
+            #endif
         case .resetting:
             fail("البلوتوث يعيد التشغيل. حاول مرة أخرى بعد قليل.")
         case .unknown:
@@ -145,7 +161,9 @@ extension BluetoothManager: @preconcurrency CBCentralManagerDelegate {
                         advertisementData: [String: Any], rssi RSSI: NSNumber) {
         guard state == .scanning else { return }
         let advertisedName = advertisementData[CBAdvertisementDataLocalNameKey] as? String
-        let name = advertisedName ?? peripheral.name ?? "جهاز BLE بدون اسم"
+        guard let name = advertisedName ?? peripheral.name, !name.trimmingCharacters(in: .whitespaces).isEmpty else {
+            return
+        }
         peripherals[peripheral.identifier] = peripheral
         let device = OBDDevice(id: peripheral.identifier, name: name, signalStrength: RSSI.intValue)
         if let index = devices.firstIndex(where: { $0.id == device.id }) {
@@ -153,7 +171,6 @@ extension BluetoothManager: @preconcurrency CBCentralManagerDelegate {
         } else {
             devices.append(device)
         }
-        // Never connect to the first result automatically. The user selects it.
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {

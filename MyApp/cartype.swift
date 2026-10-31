@@ -147,10 +147,8 @@ struct ContentView: View {
     }
 
     private func beginConnection(for brand: String) {
-        if savedVehicle?.brand != brand {
-            obdService.stopSession()
-            bluetoothManager.disconnect()
-        }
+        obdService.stopSession()
+        bluetoothManager.disconnect()
         selectedBrand = brand
     }
 

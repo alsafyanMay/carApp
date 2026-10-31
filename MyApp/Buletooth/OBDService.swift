@@ -34,11 +34,22 @@ final class OBDService: ObservableObject {
         guard bluetoothManager.state == .connected else { return }
         stopSession()
         capabilitiesRetryCount = 0
+        #if targetEnvironment(simulator)
+        state = .checkingVehicle
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(1))
+            self?.supportedPIDs = [0x05, 0x2F, 0x42]
+            self?.vehicleData = VehicleData(coolantTemperature: 89, fuelLevel: 72, batteryVoltage: 12.8, rpm: 800, lastRecordedAt: Date())
+            self?.vehicleData.save()
+            self?.state = .ready
+        }
+        #else
         state = .initializing
         phase = .configuration
         // أوامر تهيئة LELink / ELM327 الأساسية
         commands = ["ATZ", "ATE0", "ATL0", "ATH0", "ATSP0"]
         sendNextCommand()
+        #endif
     }
 
     func stopSession() {
