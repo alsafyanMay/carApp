@@ -75,6 +75,7 @@ struct DashboardView: View {
     var coolantTemp: Double? = nil     // حرارة المحرك
     var fuelLevel: Double? = nil       // نسبة الوقود
     var batteryVoltage: Double? = nil  // جهد البطارية
+    var lastRecordedAt: Date? = nil    // وقت آخر قراءة تم حفظها
     // هل الاتصال بالسيارة شغّال؟
     var isConnected: Bool = true
     // وش يصير لما يضغط "إعادة الاتصال" (cartype يرجّعه لصفحة اختيار السيارة)
@@ -153,6 +154,13 @@ struct DashboardView: View {
                         .foregroundStyle(.white.opacity(0.9))
                         // مسافة من فوق
                         .padding(.top, 20)
+
+                    if !isConnected, let lastRecordedAt {
+                        Text("آخر قراءة مسجلة: \(lastRecordedAt.formatted(date: .omitted, time: .shortened))")
+                            .font(.subheadline)
+                            .foregroundStyle(.white.opacity(0.7))
+                            .padding(.top, 4)
+                    }
 
                     // لو انقطع الاتصال: زر يرجّع المستخدم يتصل من جديد
                     if !isConnected {
@@ -245,9 +253,11 @@ struct DashboardView: View {
         .environment(\.layoutDirection, .rightToLeft)
         // الوضع الداكن
         .preferredColorScheme(.dark)
-        // لو انقطع الاتصال وفيه صفحة تفاصيل مفتوحة، نسكّرها (عشان ما تعرض 0 بدل القراءة)
+        // لو انقطع الاتصال وما فيه أي قراءة محفوظة، نسكّر الشيت
         .onChange(of: isConnected) { _, connected in
-            if !connected { activeSheet = nil }
+            if !connected && coolantTemp == nil && fuelLevel == nil && batteryVoltage == nil {
+                activeSheet = nil
+            }
         }
         // الشيت: يفتح الصفحة المطلوبة ويرسل لها القيمة
         .sheet(item: $activeSheet) { sheet in

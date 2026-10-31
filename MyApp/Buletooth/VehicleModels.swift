@@ -24,12 +24,25 @@ struct OBDDevice: Identifiable {
 
 // MARK: - Live Vehicle Data
 
-struct VehicleData {
+struct VehicleData: Codable {
     var coolantTemperature: Double?
     var fuelLevel: Double?
     // PID 42 reports control-module voltage, not battery health or charge percentage.
     var batteryVoltage: Double?
     var rpm: Double?
+    var lastRecordedAt: Date?
+
+    private static let key = "lastKnownVehicleData.v1"
+
+    static func load() -> VehicleData? {
+        guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
+        return try? JSONDecoder().decode(VehicleData.self, from: data)
+    }
+
+    func save() {
+        guard let data = try? JSONEncoder().encode(self) else { return }
+        UserDefaults.standard.set(data, forKey: Self.key)
+    }
 }
 
 // MARK: - Local Vehicle Profile

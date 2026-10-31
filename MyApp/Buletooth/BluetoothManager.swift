@@ -78,11 +78,9 @@ final class BluetoothManager: NSObject, ObservableObject {
     func send(command: String) -> Bool {
         guard state == .connected, let peripheral, let channel,
               let data = (command + "\r").data(using: .utf8) else { return false }
-        // Commands are short and serialized by OBDService.
         let type: CBCharacteristicWriteType = channel.properties.contains(.write)
             ? .withResponse : .withoutResponse
         guard data.count <= peripheral.maximumWriteValueLength(for: type) else { return false }
-        if type == .withoutResponse && !peripheral.canSendWriteWithoutResponse { return false }
         peripheral.writeValue(data, for: channel, type: type)
         return true
     }
@@ -162,7 +160,7 @@ extension BluetoothManager: @preconcurrency CBCentralManagerDelegate {
         guard self.peripheral === peripheral else { return }
         connectedDeviceName = peripheral.name ?? devices.first(where: { $0.id == peripheral.identifier })?.name
         connectedDeviceID = peripheral.identifier
-        peripheral.discoverServices([serviceUUID])
+        peripheral.discoverServices(nil)
     }
 
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral,
@@ -181,30 +179,43 @@ extension BluetoothManager: @preconcurrency CBCentralManagerDelegate {
 extension BluetoothManager: @preconcurrency CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         guard self.peripheral === peripheral else { return }
-        guard error == nil, let service = peripheral.services?.first(where: { $0.uuid == serviceUUID }) else {
-            fail("الجهاز المختار لا يوفر قناة الاتصال المطلوبة لـ LELink.")
+        guard error == nil, let services = peripheral.services, !services.isEmpty else {
+            fail("الجهاز المختار لا يوفر خدمات اتصال.")
             return
         }
-        peripheral.discoverCharacteristics([channelUUID], for: service)
+        let targetService = services.first(where: {
+            $0.uuid == serviceUUID || $0.uuid.uuidString.uppercased().contains("FFE0")
+        }) ?? services.first(where: { $0.uuid.uuidString.uppercased().contains("FFF0") }) ?? services.first!
+
+        peripheral.discoverCharacteristics(nil, for: targetService)
     }
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService,
                     error: Error?) {
         guard self.peripheral === peripheral else { return }
-        guard error == nil,
-              let channel = service.characteristics?.first(where: { $0.uuid == channelUUID }),
-              channel.properties.contains(.notify) || channel.properties.contains(.indicate),
-              channel.properties.contains(.write) || channel.properties.contains(.writeWithoutResponse) else {
+        guard error == nil, let characteristics = service.characteristics, !characteristics.isEmpty else {
             fail("لا يمكن إرسال الأوامر واستقبال البيانات من هذا الجهاز.")
             return
         }
+        let channel = characteristics.first(where: {
+            $0.uuid == channelUUID || $0.uuid.uuidString.uppercased().contains("FFE1")
+        }) ?? characteristics.first(where: {
+            ($0.properties.contains(.notify) || $0.properties.contains(.indicate)) &&
+            ($0.properties.contains(.write) || $0.properties.contains(.writeWithoutResponse))
+        }) ?? characteristics.first!
+
         self.channel = channel
-        peripheral.setNotifyValue(true, for: channel)
+        if channel.properties.contains(.notify) || channel.properties.contains(.indicate) {
+            peripheral.setNotifyValue(true, for: channel)
+        } else {
+            timeoutTask?.cancel()
+            state = .connected
+        }
     }
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic,
                     error: Error?) {
-        guard self.peripheral === peripheral, characteristic.uuid == channelUUID else { return }
+        guard self.peripheral === peripheral, characteristic == self.channel else { return }
         guard error == nil, characteristic.isNotifying else {
             fail("تعذر استقبال البيانات من الجهاز. إذا طلب النظام رمز اقتران، استخدم رمز جهازك.")
             return
@@ -215,7 +226,7 @@ extension BluetoothManager: @preconcurrency CBPeripheralDelegate {
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic,
                     error: Error?) {
-        guard self.peripheral === peripheral, characteristic.uuid == channelUUID else { return }
+        guard self.peripheral === peripheral, characteristic == self.channel else { return }
         guard error == nil else {
             fail("تعذر استقبال رد الجهاز. حاول إعادة الاتصال.")
             return
@@ -226,7 +237,7 @@ extension BluetoothManager: @preconcurrency CBPeripheralDelegate {
 
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic,
                     error: Error?) {
-        guard self.peripheral === peripheral, characteristic.uuid == channelUUID, error != nil else { return }
+        guard self.peripheral === peripheral, characteristic == self.channel, error != nil else { return }
         fail("تعذر إرسال الطلب للجهاز. تحقق من رمز الاقتران إن كان جهازك محميًا.")
     }
 }

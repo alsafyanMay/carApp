@@ -93,6 +93,7 @@ struct ContentView: View {
                 coolantTemp: obdService.vehicleData.coolantTemperature,
                 fuelLevel: obdService.vehicleData.fuelLevel,
                 batteryVoltage: obdService.vehicleData.batteryVoltage,
+                lastRecordedAt: obdService.vehicleData.lastRecordedAt,
                 isConnected: obdService.state == .ready,
                 // إعادة الاتصال: نرجع لصفحة اختيار السيارة
                 onReconnect: { showDashboard = false }

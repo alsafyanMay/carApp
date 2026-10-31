@@ -4,7 +4,7 @@ import Combine
 @MainActor
 final class OBDService: ObservableObject {
     @Published private(set) var state: OBDSessionState = .idle
-    @Published private(set) var vehicleData = VehicleData()
+    @Published private(set) var vehicleData = VehicleData.load() ?? VehicleData()
     @Published private(set) var supportedPIDs: Set<UInt8> = []
     @Published private(set) var updatedAt: [UInt8: Date] = [:]
 
@@ -16,6 +16,8 @@ final class OBDService: ObservableObject {
     private var pollingTask: Task<Void, Never>?
     private enum Phase { case configuration, capabilities, initialRead, polling }
     private var phase = Phase.configuration
+
+    private var capabilitiesRetryCount = 0
 
     // Only the three existing product readings are polled. RPM is not a feature.
     private let readingPIDs: [UInt8] = [0x05, 0x2F, 0x42]
@@ -31,10 +33,11 @@ final class OBDService: ObservableObject {
     func startSession() {
         guard bluetoothManager.state == .connected else { return }
         stopSession()
+        capabilitiesRetryCount = 0
         state = .initializing
         phase = .configuration
-        // Adapter setup and read requests only. No fault clearing or coding commands.
-        commands = ["ATZ", "ATE0", "ATL0", "ATS0", "ATH0", "ATSP0"]
+        // أوامر تهيئة LELink / ELM327 الأساسية
+        commands = ["ATZ", "ATE0", "ATL0", "ATH0", "ATSP0"]
         sendNextCommand()
     }
 
@@ -44,7 +47,11 @@ final class OBDService: ObservableObject {
         commands = []
         currentCommand = nil
         responseBuffer = ""
-        vehicleData = VehicleData()
+        capabilitiesRetryCount = 0
+        // نحتفظ بآخر قراءة مسجلة لتبقى متاحة للمستخدم دون اتصال
+        if vehicleData.lastRecordedAt == nil, let cached = VehicleData.load() {
+            vehicleData = cached
+        }
         supportedPIDs = []
         updatedAt = [:]
         state = .idle
@@ -89,6 +96,10 @@ final class OBDService: ObservableObject {
             sendNextCommand()
         case .capabilities:
             phase = .initialRead
+            // إذا لم يتم استلام خريطة PIDs صريحة، نضع القراءات الأساسية كاحتياط
+            if supportedPIDs.isEmpty {
+                supportedPIDs = Set(readingPIDs)
+            }
             commands = readingCommands
             sendNextCommand()
         case .initialRead:
@@ -129,24 +140,38 @@ final class OBDService: ObservableObject {
         let upper = response.uppercased()
         let errors = ["UNABLE TO CONNECT", "CAN ERROR", "BUS ERROR", "BUS INIT: ERROR", "STOPPED"]
         if errors.contains(where: { upper.contains($0) }) {
-            fail("وصلنا إلى جهاز القراءة، لكن تعذر التواصل مع السيارة. تحقق من إشعالها وتوافقها مع OBD-II.")
+            fail("تم الاتصال بقطعة الفحص، لكن تعذر التواصل مع كمبيوتر السيارة. تأكد أن سويتش السيارة في وضع التشغيل (Ignition ON) وليس فقط وضع الملحقات (ACC).")
             return
         }
 
         if command.hasPrefix("AT") {
-            let valid = command == "ATZ"
-                ? (upper.contains("ELM") || upper.contains("STN") || upper.contains("OBDLINK"))
-                : lines(in: upper).contains("OK")
-            guard valid else {
-                fail("الجهاز المختار لم يستجب كجهاز قراءة متوافق. اختر جهاز LELink وتأكد من إعداداته.")
+            if command == "ATZ" {
+                // نمنح LELink وقتاً للاستقرار بعد إعادة التشغيل
+                Task { [weak self] in
+                    try? await Task.sleep(for: .milliseconds(600))
+                    self?.sendNextCommand()
+                }
                 return
             }
+            // لأي أمر AT آخر: ننتقل مباشرة للأمر التالي دون شرط صارم يعيق الاتصال
+            sendNextCommand()
+            return
         } else if phase == .capabilities {
             let base = Int(command.suffix(2), radix: 16) ?? 0
             let replies = payloads(for: UInt8(base), in: upper).filter { $0.count >= 4 }
-            guard !replies.isEmpty else {
-                fail("تم الاتصال بالجهاز، لكن لم نستقبل تأكيدًا من كمبيوتر السيارة. تحقق من الإشعال والتوافق ثم أعد المحاولة.")
-                return
+            if replies.isEmpty {
+                if capabilitiesRetryCount < 2 {
+                    capabilitiesRetryCount += 1
+                    commands.insert("0100", at: 0)
+                    Task { [weak self] in
+                        try? await Task.sleep(for: .seconds(1))
+                        self?.sendNextCommand()
+                    }
+                    return
+                } else {
+                    fail("تم الاتصال بقطعة الفحص بنجاح، لكن كمبيوتر السيارة لم يستجب. تأكد من تشغيل سويتش السيارة بالكامل (Ignition ON) ليعمل كمبيوتر المحرك.")
+                    return
+                }
             }
             // Union the supported PIDs reported by the responding control units.
             var bitmap: UInt32 = 0
@@ -194,17 +219,26 @@ final class OBDService: ObservableObject {
         var received = false
         switch pid {
         case 0x05:
-            vehicleData.coolantTemperature = bytes.first.map { Double(Int($0) - 40) }
-            received = !bytes.isEmpty
+            if let temp = bytes.first.map({ Double(Int($0) - 40) }) {
+                vehicleData.coolantTemperature = temp
+                received = true
+            }
         case 0x2F:
-            vehicleData.fuelLevel = bytes.first.map { Double($0) * 100 / 255 }
-            received = !bytes.isEmpty
+            if let fuel = bytes.first.map({ Double($0) * 100 / 255 }) {
+                vehicleData.fuelLevel = fuel
+                received = true
+            }
         case 0x42:
-            vehicleData.batteryVoltage = bytes.count >= 2
-                ? Double(Int(bytes[0]) * 256 + Int(bytes[1])) / 1000 : nil
-            received = bytes.count >= 2
+            if bytes.count >= 2 {
+                vehicleData.batteryVoltage = Double(Int(bytes[0]) * 256 + Int(bytes[1])) / 1000
+                received = true
+            }
         default:
             break
+        }
+        if received {
+            vehicleData.lastRecordedAt = Date()
+            vehicleData.save()
         }
         // Missing/invalid/NO DATA replies clear the old value instead of displaying it as live.
         updatedAt[pid] = received ? Date() : nil
