@@ -1,7 +1,7 @@
 import SwiftUI
 
 // Onboarding is a temporary root, never a destination in the navigation history.
-struct splash: View {
+struct SplashView: View {
     @AppStorage("hasCompletedOnboarding.v1") private var completed = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -59,14 +59,17 @@ struct AcademyOnboarding: View {
                 }
 
                 ZStack(alignment: .trailing) {
-                    HStack(spacing: 10) {
+                    // Page-control dots sit close together (~16pt apart, like UIPageControl);
+                    // the tap area stays tall, and each dot's hit area spans its 24pt slot.
+                    HStack(spacing: 0) {
                         ForEach(0..<2) { index in
                             Button {
                                 setPage(index)
                             } label: {
                                 Circle().fill(page == index ? Color.white : Color.white.opacity(0.28))
                                     .frame(width: 8, height: 8)
-                                    .frame(width: 44, height: 44)
+                                    .frame(width: 24, height: 44)
+                                    .contentShape(Rectangle())
                             }
                             .accessibilityLabel("الصفحة \(index + 1) من ٢")
                             .accessibilityAddTraits(page == index ? .isSelected : [])
@@ -103,10 +106,26 @@ struct AcademyOnboarding: View {
 
     private func pageContent(height: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Image(page == 0 ? "Mirrored car with fuel and temperature cards Copy" : "Offline Bluetooth Car Link")
-                .resizable().scaledToFit()
+            Group {
+                if page == 0 {
+                    // الصورة بحجم كانفس طولي وفيها حواف شفافة أعلى وأسفل، فنقصّها ونملأ العرض
+                    Color.clear
+                        .aspectRatio(1122 / 720, contentMode: .fit)
+                        .overlay(
+                            Image("Mirrored car with fuel and temperature cards Copy")
+                                .resizable().scaledToFill()
+                        )
+                        .clipped()
+                } else {
+                    Image("Offline Bluetooth Car Link")
+                        .resizable().scaledToFit()
+                        .frame(height: min(320, height * 0.38))
+                }
+            }
                 .frame(maxWidth: .infinity)
-                .frame(height: min(260, height * 0.31))
+                // الصفحة الأولى: الصورة داخل الهوامش عشان ما تلمس حدود الجوال
+                // الصفحة الثانية: تمتد بعرض الشاشة كاملًا (تتجاوز هامش الصفحة 20)
+                .padding(.horizontal, page == 0 ? 12 : -20)
                 .padding(.top, max(12, height * 0.07))
                 .padding(.bottom, max(32, height * 0.09))
                 .accessibilityHidden(true)
@@ -125,8 +144,10 @@ struct AcademyOnboarding: View {
             Spacer(minLength: 24)
         }
         .multilineTextAlignment(.leading)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 32)
+        // على الآيباد: عرض مريح يتوسّط الشاشة بدل التمدد الكامل
+        .frame(maxWidth: 560, alignment: .leading)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 20)
         .id(page)
         .transition(pageTransition)
     }
@@ -138,4 +159,4 @@ struct AcademyOnboarding: View {
     }
 }
 
-#Preview("Onboarding — Arabic") { splash() }
+#Preview("Onboarding — Arabic") { SplashView() }

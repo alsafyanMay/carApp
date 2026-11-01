@@ -14,6 +14,8 @@ struct ContentView: View {
     @StateObject private var obdService: OBDService
     @State private var selectedBrand: String?
     @State private var savedVehicle = SavedVehicle.load()
+    // هل الداش بورد ظاهر؟ (يصير true بعد ما ينجح الاتصال)
+      @State private var showDashboard = false
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
@@ -22,11 +24,12 @@ struct ContentView: View {
         _obdService = StateObject(wrappedValue: OBDService(bluetoothManager: manager))
     }
 
-    let carBrands = [
-        ("تويوتا", "Image"),
-        ("شانجان", "Image 1"),
-        ("هافال", "Image 2"),
-        ("شركة أخرى", "")
+    // الرقم الثالث: عرض الصورة بحيث يطلع المربع الغامق في كل شعار بنفس الحجم (68)
+    // (مربع تويوتا في صورته أكبر شوي من شانجان، فشانجان تتكبّر أكثر)
+    let carBrands: [(String, String, CGFloat)] = [
+        ("تويوتا", "Image", 77),
+        ("شانجان", "Image 1", 81),
+        ("شركة أخرى", "", 68)
     ]
 
     var body: some View {
@@ -70,19 +73,34 @@ struct ContentView: View {
                         savedVehicle = SavedVehicle.load()
                         selectedBrand = nil
                         // Dashboard file is not supplied. Replace this callback with its route.
+                        showDashboard = true
                         // The success popup must never imply that a missing dashboard exists.
                     }
                 )
             }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .background {
-                obdService.stopSession()
-                bluetoothManager.disconnect()
-            }
+                    if phase == .background {
+                        obdService.stopSession()
+                        bluetoothManager.disconnect()
+                    }
+                }
+                .environment(\.layoutDirection, .rightToLeft)
+                // الداش بورد يغطي الشاشة كاملة بعد الاتصال
+        // الداش بورد يغطي الشاشة كاملة بعد الاتصال
+        .fullScreenCover(isPresented: $showDashboard) {
+            // نرسل القراءات الحية من جهاز الـ OBD
+            DashboardView(
+                coolantTemp: obdService.vehicleData.coolantTemperature,
+                fuelLevel: obdService.vehicleData.fuelLevel,
+                batteryVoltage: obdService.vehicleData.batteryVoltage,
+                lastRecordedAt: obdService.vehicleData.lastRecordedAt,
+                isConnected: obdService.state == .ready,
+                // إعادة الاتصال: نرجع لصفحة اختيار السيارة
+                onReconnect: { showDashboard = false }
+            )
         }
-        .environment(\.layoutDirection, .rightToLeft)
-    }
+            }
 
     private var brandSelection: some View {
             VStack(alignment: .leading, spacing: 0) {
@@ -90,13 +108,14 @@ struct ContentView: View {
                 Text("اختر شركة سيارتك:")
                     .font(.system(size: 36, weight: .bold))
                     .foregroundColor(.white)
-                    .padding(.top, 28)
+                    // مسافة من فوق عشان العنوان ما يلصق بأعلى الشاشة
+                    .padding(.top, 72)
                     .padding(.horizontal, 4)
 
                 // البطاقات
                 VStack(spacing: 16) {
                     ForEach(carBrands, id: \.0) { brand in
-                        BrandCard(name: brand.0, imageName: brand.1) {
+                        BrandCard(name: brand.0, imageName: brand.1, imageWidth: brand.2) {
                             beginConnection(for: brand.0)
                         }
                     }
@@ -130,10 +149,8 @@ struct ContentView: View {
     }
 
     private func beginConnection(for brand: String) {
-        if savedVehicle?.brand != brand {
-            obdService.stopSession()
-            bluetoothManager.disconnect()
-        }
+        obdService.stopSession()
+        bluetoothManager.disconnect()
         selectedBrand = brand
     }
 
@@ -143,15 +160,15 @@ struct ContentView: View {
                 .frame(width: 10, height: 10)
             VStack(alignment: .leading, spacing: 4) {
                 Text("\(vehicle.brand) — \(isConnected ? "متصل" : "غير متصل")")
-                    .font(.subheadline.bold()).foregroundStyle(.white)
-                Text(vehicle.deviceName).font(.caption)
+                    .font(.system(size: 15, weight: .bold)).foregroundStyle(.white)
+                Text(vehicle.deviceName).font(.system(size: 12))
                     .foregroundStyle(Color.white.opacity(0.55))
             }
             Spacer(minLength: 0)
             Button(isConnected ? "حالة الاتصال" : "إعادة الاتصال") {
                 selectedBrand = vehicle.brand
             }
-            .font(.subheadline).foregroundStyle(.white)
+            .font(.system(size: 15)).foregroundStyle(.white)
         }
         .padding(16)
         .background(RoundedRectangle(cornerRadius: 20).fill(Color.black.opacity(0.28)))
@@ -163,29 +180,52 @@ struct ContentView: View {
 struct BrandCard: View {
     let name: String
     let imageName: String
+    // عرض الصورة قبل القص إلى 68×68
+    let imageWidth: CGFloat
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 22) {
                 if imageName.isEmpty {
+                    // نفس مربع الشعارات: أخضر غامق مع لمعة خفيفة من فوق، وسيارة بيضاء
                     Image(systemName: "car.side.fill")
                         .font(.system(size: 28))
-                        .foregroundStyle(Color.white.opacity(0.72))
+                        .foregroundStyle(.white)
                         .frame(width: 68, height: 68)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.08)))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.15)))
+                        .background(
+                            ZStack {
+                                LinearGradient(
+                                    colors: [Color(red: 0.18, green: 0.26, blue: 0.22),
+                                             Color(red: 0.08, green: 0.14, blue: 0.12)],
+                                    startPoint: .top, endPoint: .bottom)
+                                // لمعة في الزاوية العليا اليسرى مثل الشعارات
+                                // (.topTrailing لأن الصفحة RTL، فهي الزاوية اليسرى الفعلية)
+                                RadialGradient(
+                                    colors: [Color.white.opacity(0.2), .clear],
+                                    center: .topTrailing,
+                                    startRadius: 0, endRadius: 40)
+                            }
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                        )
+                        .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
                 } else {
-                Image(imageName)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 68, height: 68)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.white.opacity(0.15), lineWidth: 1)
-                    )
-                    .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
+                    // كل الأيقونات بنفس المقاس 68×68
+                    Image(imageName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: imageWidth, height: imageWidth)
+                        .frame(width: 68, height: 68)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                        )
+                        .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
                 }
 
                 Text(name)

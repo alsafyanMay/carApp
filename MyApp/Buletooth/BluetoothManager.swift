@@ -42,13 +42,32 @@ final class BluetoothManager: NSObject, ObservableObject {
 
     func retry() { start() }
 
+    // MARK: - OBD Device Filter
+
+    // أسماء/كلمات تدل على محولات OBD الشائعة
+    private static let obdNameKeywords = [
+        "obd", "elm", "lelink", "vlink", "v-link", "vgate", "veepeak", "viecar",
+        "konnwei", "bafx", "carista", "kiwi", "icar", "lsb2", "scantool", "obdlink"
+    ]
+
+    // خدمات الإعلان المستخدمة عادة في محولات OBD (FFE0 / FFF0 / 18F0)
+    private static let obdServiceUUIDs: Set<CBUUID> = [
+        CBUUID(string: "FFE0"), CBUUID(string: "FFF0"), CBUUID(string: "18F0")
+    ]
+
+    private static func isOBDAdapter(name: String, advertisementData: [String: Any]) -> Bool {
+        let lowered = name.lowercased()
+        if obdNameKeywords.contains(where: { lowered.contains($0) }) { return true }
+        let advertised = advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID] ?? []
+        return advertised.contains(where: { obdServiceUUIDs.contains($0) })
+    }
+
     private func scan() {
         guard let centralManager, centralManager.state == .poweredOn else { return }
         state = .scanning
-        // The service is shared by other BLE products; a name/service match alone
-        // does not prove that a device is an OBD adapter. OBDService verifies it.
-        centralManager.scanForPeripherals(withServices: [serviceUUID], options: nil)
-        setTimeout(seconds: 12) { manager in
+        // مسح عام دون حصر على UUID الإعلان، لأن أغلب أجهزة OBD لا تضع الخدمة في حزمة الإعلان
+        centralManager.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: false])
+        setTimeout(seconds: 15) { manager in
             manager.centralManager?.stopScan()
             manager.wantsScan = false
             manager.state = .scanFinished
@@ -56,6 +75,15 @@ final class BluetoothManager: NSObject, ObservableObject {
     }
 
     func connect(deviceID: UUID) {
+        #if targetEnvironment(simulator)
+        state = .connecting
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(800))
+            self?.connectedDeviceName = "LELink LSB2 (محاكاة)"
+            self?.connectedDeviceID = deviceID
+            self?.state = .connected
+        }
+        #else
         guard let target = peripherals[deviceID] else {
             fail("لم يعد الجهاز متاحًا. ابحث عنه مرة أخرى.")
             return
@@ -70,6 +98,7 @@ final class BluetoothManager: NSObject, ObservableObject {
         setTimeout(seconds: 20) { manager in
             manager.fail("انتهت مهلة الاتصال بالجهاز. تأكد أنه قريب وغير مستخدم في تطبيق آخر.")
         }
+        #endif
     }
 
     // MARK: - Read-only OBD Transport
@@ -78,11 +107,9 @@ final class BluetoothManager: NSObject, ObservableObject {
     func send(command: String) -> Bool {
         guard state == .connected, let peripheral, let channel,
               let data = (command + "\r").data(using: .utf8) else { return false }
-        // Commands are short and serialized by OBDService.
         let type: CBCharacteristicWriteType = channel.properties.contains(.write)
             ? .withResponse : .withoutResponse
         guard data.count <= peripheral.maximumWriteValueLength(for: type) else { return false }
-        if type == .withoutResponse && !peripheral.canSendWriteWithoutResponse { return false }
         peripheral.writeValue(data, for: channel, type: type)
         return true
     }
@@ -126,7 +153,14 @@ final class BluetoothManager: NSObject, ObservableObject {
             disconnect()
             state = .permissionDenied
         case .unsupported:
+            #if targetEnvironment(simulator)
+            state = .scanning
+            let mockID = UUID()
+            let mockDevice = OBDDevice(id: mockID, name: "LELink LSB2 (محاكاة)", signalStrength: -45)
+            devices = [mockDevice]
+            #else
             fail("هذا الجهاز لا يدعم اتصال البلوتوث المطلوب.")
+            #endif
         case .resetting:
             fail("البلوتوث يعيد التشغيل. حاول مرة أخرى بعد قليل.")
         case .unknown:
@@ -147,7 +181,10 @@ extension BluetoothManager: @preconcurrency CBCentralManagerDelegate {
                         advertisementData: [String: Any], rssi RSSI: NSNumber) {
         guard state == .scanning else { return }
         let advertisedName = advertisementData[CBAdvertisementDataLocalNameKey] as? String
-        let name = advertisedName ?? peripheral.name ?? "جهاز BLE بدون اسم"
+        guard let name = advertisedName ?? peripheral.name, !name.trimmingCharacters(in: .whitespaces).isEmpty else {
+            return
+        }
+        guard Self.isOBDAdapter(name: name, advertisementData: advertisementData) else { return }
         peripherals[peripheral.identifier] = peripheral
         let device = OBDDevice(id: peripheral.identifier, name: name, signalStrength: RSSI.intValue)
         if let index = devices.firstIndex(where: { $0.id == device.id }) {
@@ -155,14 +192,13 @@ extension BluetoothManager: @preconcurrency CBCentralManagerDelegate {
         } else {
             devices.append(device)
         }
-        // Never connect to the first result automatically. The user selects it.
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         guard self.peripheral === peripheral else { return }
         connectedDeviceName = peripheral.name ?? devices.first(where: { $0.id == peripheral.identifier })?.name
         connectedDeviceID = peripheral.identifier
-        peripheral.discoverServices([serviceUUID])
+        peripheral.discoverServices(nil)
     }
 
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral,
@@ -181,30 +217,43 @@ extension BluetoothManager: @preconcurrency CBCentralManagerDelegate {
 extension BluetoothManager: @preconcurrency CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         guard self.peripheral === peripheral else { return }
-        guard error == nil, let service = peripheral.services?.first(where: { $0.uuid == serviceUUID }) else {
-            fail("الجهاز المختار لا يوفر قناة الاتصال المطلوبة لـ LELink.")
+        guard error == nil, let services = peripheral.services, !services.isEmpty else {
+            fail("الجهاز المختار لا يوفر خدمات اتصال.")
             return
         }
-        peripheral.discoverCharacteristics([channelUUID], for: service)
+        let targetService = services.first(where: {
+            $0.uuid == serviceUUID || $0.uuid.uuidString.uppercased().contains("FFE0")
+        }) ?? services.first(where: { $0.uuid.uuidString.uppercased().contains("FFF0") }) ?? services.first!
+
+        peripheral.discoverCharacteristics(nil, for: targetService)
     }
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService,
                     error: Error?) {
         guard self.peripheral === peripheral else { return }
-        guard error == nil,
-              let channel = service.characteristics?.first(where: { $0.uuid == channelUUID }),
-              channel.properties.contains(.notify) || channel.properties.contains(.indicate),
-              channel.properties.contains(.write) || channel.properties.contains(.writeWithoutResponse) else {
+        guard error == nil, let characteristics = service.characteristics, !characteristics.isEmpty else {
             fail("لا يمكن إرسال الأوامر واستقبال البيانات من هذا الجهاز.")
             return
         }
+        let channel = characteristics.first(where: {
+            $0.uuid == channelUUID || $0.uuid.uuidString.uppercased().contains("FFE1")
+        }) ?? characteristics.first(where: {
+            ($0.properties.contains(.notify) || $0.properties.contains(.indicate)) &&
+            ($0.properties.contains(.write) || $0.properties.contains(.writeWithoutResponse))
+        }) ?? characteristics.first!
+
         self.channel = channel
-        peripheral.setNotifyValue(true, for: channel)
+        if channel.properties.contains(.notify) || channel.properties.contains(.indicate) {
+            peripheral.setNotifyValue(true, for: channel)
+        } else {
+            timeoutTask?.cancel()
+            state = .connected
+        }
     }
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic,
                     error: Error?) {
-        guard self.peripheral === peripheral, characteristic.uuid == channelUUID else { return }
+        guard self.peripheral === peripheral, characteristic == self.channel else { return }
         guard error == nil, characteristic.isNotifying else {
             fail("تعذر استقبال البيانات من الجهاز. إذا طلب النظام رمز اقتران، استخدم رمز جهازك.")
             return
@@ -215,7 +264,7 @@ extension BluetoothManager: @preconcurrency CBPeripheralDelegate {
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic,
                     error: Error?) {
-        guard self.peripheral === peripheral, characteristic.uuid == channelUUID else { return }
+        guard self.peripheral === peripheral, characteristic == self.channel else { return }
         guard error == nil else {
             fail("تعذر استقبال رد الجهاز. حاول إعادة الاتصال.")
             return
@@ -226,7 +275,7 @@ extension BluetoothManager: @preconcurrency CBPeripheralDelegate {
 
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic,
                     error: Error?) {
-        guard self.peripheral === peripheral, characteristic.uuid == channelUUID, error != nil else { return }
+        guard self.peripheral === peripheral, characteristic == self.channel, error != nil else { return }
         fail("تعذر إرسال الطلب للجهاز. تحقق من رمز الاقتران إن كان جهازك محميًا.")
     }
 }

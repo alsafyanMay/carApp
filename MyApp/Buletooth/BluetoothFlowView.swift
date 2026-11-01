@@ -16,7 +16,8 @@ struct BluetoothFlowView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var screen = Screen.setup
     @State private var demoTask: Task<Void, Never>?
-    private enum Screen { case setup, permission, devices, connection, success }
+    // 🆕 أضفنا mismatch: شاشة "السيارة المتصلة ليست الشركة المختارة"
+    private enum Screen { case setup, permission, devices, connection, mismatch, success }
     private var isDemo: Bool { isDemoMode }
     private let demoDeviceID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
 
@@ -37,12 +38,14 @@ struct BluetoothFlowView: View {
                 .frame(maxWidth: .infinity, minHeight: geometry.size.height)
             }
         }
+        // طبقة غامقة خلف البوب أب عشان الصفحة تتراجع ويبرز البوب أب
         .background(Color.black.opacity(0.22).ignoresSafeArea())
         .environment(\.layoutDirection, .rightToLeft)
         .preferredColorScheme(.dark)
         .onAppear {
             if !isDemo, obdService.state == .ready, bluetoothManager.state == .connected {
-                screen = .success
+                // 🆕 بدل ما نروح للنجاح على طول، نتحقق من الشركة أول
+                routeAfterReady()
             } else if !isDemo, SavedVehicle.load()?.brand == carName {
                 screen = .devices
                 bluetoothManager.start()
@@ -53,7 +56,8 @@ struct BluetoothFlowView: View {
             obdService.startSession()
         }
         .onChange(of: obdService.state) { _, state in
-            if !isDemo, screen == .connection, state == .ready { screen = .success }
+            // 🆕 بعد ما تجهز السيارة، نتحقق من الشركة أول
+            if !isDemo, screen == .connection, state == .ready { routeAfterReady() }
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active, !isDemo, screen == .devices else { return }
@@ -69,7 +73,7 @@ struct BluetoothFlowView: View {
     @ViewBuilder
     private var content: some View {
         if !isDemo, let message = failureMessage,
-           screen == .devices || screen == .connection || screen == .success {
+           screen == .devices || screen == .connection || screen == .mismatch || screen == .success {
             BluetoothPopupView(
                 state: .failed(message: message),
                 onDeny: cancelFlow,
@@ -95,6 +99,8 @@ struct BluetoothFlowView: View {
                     progressMessage: "ابقَ بالقرب من الجهاز. قد يستغرق التحقق من السيارة بعض الوقت.",
                     showsBackdrop: false
                 )
+            // 🆕 الشركة ما تطابق
+            case .mismatch: mismatchCard
             case .success: success
             }
         }
@@ -103,24 +109,24 @@ struct BluetoothFlowView: View {
     // MARK: - Prepare the Adapter
 
     private var setup: some View {
-        card {
+        card(elevated: true) {
             VStack(spacing: 20) {
                 adapterIllustration
                 Text("جهّز جهاز قراءة السيارة")
-                    .font(.system(size: 22, weight: .bold)).foregroundStyle(.white)
+                    .font(.title2.bold()).foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                 Text("تحتاج جهاز LELink لقراءة بيانات سيارتك. بلوتوث السيارة وحده لا يكفي.")
-                    .font(.system(size: 17)).foregroundStyle(CarVisualStyle.secondaryText)
+                    .font(.body).foregroundStyle(CarVisualStyle.secondaryText)
                     .multilineTextAlignment(.center)
                 ConnectionSteps(steps: [
                     "أوقف السيارة وأطفئ الإشعال، ثم ركّب الجهاز حسب تعليماته في منفذ OBD-II، غالبًا أسفل المقود.",
                     "شغّل إشعال السيارة والبلوتوث في هاتفك.",
                     "ابقَ بالقرب من السيارة واختر جهازك في الخطوة التالية."
-                ])
+                ], elevated: true)
                 Button("البحث عن الجهاز", action: requestSearch)
                     .buttonStyle(PrimaryPopupButtonStyle())
                 Text("لا تملك الجهاز؟ ستحتاج إليه لعرض قراءات سيارتك.")
-                    .font(.system(size: 15)).foregroundStyle(CarVisualStyle.secondaryText)
+                    .font(.subheadline).foregroundStyle(CarVisualStyle.secondaryText)
                     .multilineTextAlignment(.center)
             }
         }
@@ -143,7 +149,7 @@ struct BluetoothFlowView: View {
                     .font(.title3.bold()).foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                 Text("اختر جهاز LELink المركّب في سيارتك.")
-                    .font(.subheadline).foregroundStyle(Color.white.opacity(0.68))
+                    .font(.subheadline).foregroundStyle(CarVisualStyle.secondaryText)
                     .multilineTextAlignment(.center)
                 if isDemo {
                     deviceRow(OBDDevice(id: demoDeviceID, name: "LELink — جهاز تجريبي", signalStrength: -50))
@@ -152,12 +158,12 @@ struct BluetoothFlowView: View {
                         HStack(spacing: 10) {
                             ProgressView().tint(.white)
                             Text("جارٍ البحث عن الأجهزة القريبة…").font(.subheadline)
-                        }.foregroundStyle(Color.white.opacity(0.68))
+                        }.foregroundStyle(CarVisualStyle.secondaryText)
                     }
                     ForEach(bluetoothManager.devices) { device in deviceRow(device) }
                     if bluetoothManager.state == .scanFinished, bluetoothManager.devices.isEmpty {
                         Text("لم نعثر على جهاز. تأكد من تركيبه وتشغيل إشعال السيارة، وأغلق أي تطبيق آخر متصل به.")
-                            .font(.subheadline).foregroundStyle(Color.white.opacity(0.72))
+                            .font(.subheadline).foregroundStyle(CarVisualStyle.secondaryText)
                             .multilineTextAlignment(.center)
                     }
                     if bluetoothManager.state == .scanFinished {
@@ -191,11 +197,11 @@ struct BluetoothFlowView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(device.name).font(.headline)
                     Text("معرّف: \(device.shortID)").font(.caption)
-                        .foregroundStyle(Color.white.opacity(0.55))
+                        .foregroundStyle(CarVisualStyle.secondaryText)
                     if !isDemo, let saved = SavedVehicle.load(), saved.brand == carName,
                        saved.deviceID == device.id {
                         Text("الجهاز المحفوظ لهذه السيارة").font(.caption)
-                            .foregroundStyle(Color.white.opacity(0.68))
+                            .foregroundStyle(CarVisualStyle.secondaryText)
                     }
                 }
                 Spacer(minLength: 0)
@@ -207,6 +213,64 @@ struct BluetoothFlowView: View {
         }.buttonStyle(.plain)
     }
 
+    // MARK: - 🆕 Vehicle Brand Check (VIN)
+
+    // نقارن رقم الهيكل بالشركة اللي اختارها المستخدم
+    private var brandCheck: VehicleBrandCheck {
+        VehicleBrandCatalog.check(vin: obdService.vin, selectedBrand: carName)
+    }
+
+    // بعد ما تجهز السيارة: لو الشركة ما تطابق نوقف ونسأل، غير كذا نكمل للنجاح
+    private func routeAfterReady() {
+        if case .mismatch = brandCheck {
+            screen = .mismatch
+        } else {
+            screen = .success
+        }
+    }
+
+    // شاشة "السيارة المتصلة ليست ..."
+    private var mismatchCard: some View {
+        card {
+            VStack(spacing: 20) {
+                // أيقونة تحذير
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.system(size: 28)).foregroundStyle(CarVisualStyle.warning)
+                    .frame(width: 56, height: 56)
+                    .background(Circle().fill(Color.white.opacity(0.07)))
+                    .accessibilityHidden(true)
+                // العنوان
+                Text("السيارة المتصلة ليست \(carName)")
+                    .font(.title2.bold()).foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+                // الشرح
+                Text(mismatchMessage)
+                    .font(.body).foregroundStyle(CarVisualStyle.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                // رقم الهيكل (يساعد المستخدم يتأكد)
+                if let vin = obdService.vin {
+                    Text("رقم الهيكل: \(vin)")
+                        .font(.caption).foregroundStyle(CarVisualStyle.secondaryText)
+                        .environment(\.layoutDirection, .leftToRight)
+                }
+                // يرجع يختار الشركة الصحيحة
+                Button("تغيير شركة السيارة", action: cancelFlow)
+                    .buttonStyle(PrimaryPopupButtonStyle())
+                // أو يكمل لو متأكد إن اختياره صح
+                Button("المتابعة على أي حال") { screen = .success }
+                    .buttonStyle(SecondaryPopupButtonStyle())
+            }
+        }
+    }
+
+    private var mismatchMessage: String {
+        if case .mismatch(let detected?) = brandCheck {
+            return "حسب رقم الهيكل، السيارة المتصلة من \(detected). اختر الشركة الصحيحة حتى تظهر لك المعلومات المناسبة لسيارتك."
+        }
+        return "حسب رقم الهيكل، السيارة المتصلة من شركة أخرى. اختر الشركة الصحيحة حتى تظهر لك المعلومات المناسبة لسيارتك."
+    }
+
     // MARK: - Verified Connection and Partial Availability
 
     private var success: some View {
@@ -215,7 +279,8 @@ struct BluetoothFlowView: View {
             onContinue: complete,
             onChangeDevice: beginSearch,
             successTitle: isDemo ? "معاينة نجاح الاتصال" : "تم الاتصال بنجاح",
-            successMessage: isDemo ? "معاينة فقط؛ لا توجد قراءات حقيقية." : "",
+            // 🆕 لو ما قدرنا نتحقق من الشركة، نوضح للمستخدم
+            successMessage: isDemo ? "معاينة فقط؛ لا توجد قراءات حقيقية." : brandNote,
             deviceName: isDemo ? "LELink — جهاز تجريبي" : bluetoothManager.connectedDeviceName ?? "LELink",
             readingDetails: isDemo ? [] : readingDetails,
             showsBackdrop: false
@@ -226,6 +291,12 @@ struct BluetoothFlowView: View {
             guard !Task.isCancelled else { return }
             complete()
         }
+    }
+
+    // 🆕 ملاحظة تحت "تم الاتصال": نكتبها بس لو الشركة معروفة عندنا وما قدرنا نتحقق منها
+    private var brandNote: String {
+        guard VehicleBrandCatalog.prefixes[carName] != nil, brandCheck == .unknown else { return "" }
+        return "لم نتمكن من التحقق من شركة السيارة من رقم الهيكل."
     }
 
     private var readingDetails: [String] {
@@ -312,9 +383,9 @@ struct BluetoothFlowView: View {
             .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.08)))
             VStack(spacing: 4) {
                 Text("LELink").font(.headline)
-                Text("OBD-II").font(.caption2).foregroundStyle(Color.white.opacity(0.55))
+                Text("OBD-II").font(.caption).foregroundStyle(CarVisualStyle.secondaryText)
             }
-            .foregroundStyle(.white).frame(width: 112, height: 55)
+            .foregroundStyle(.white).frame(minWidth: 112, minHeight: 55)
             .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(0.28)))
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.14)))
         }
@@ -337,8 +408,8 @@ struct BluetoothFlowView: View {
         }
     }
 
-    private func card<Content: View>(@ViewBuilder content: @escaping () -> Content) -> some View  {
-        ConnectionCard(onClose: cancelFlow, content: content).padding(.horizontal, 24)
+    private func card<Content: View>(elevated: Bool = true, @ViewBuilder content: @escaping () -> Content) -> some View  {
+        ConnectionCard(onClose: cancelFlow, elevated: elevated, content: content).padding(.horizontal, 24)
     }
 }
 
