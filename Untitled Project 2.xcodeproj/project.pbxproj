@@ -331,7 +331,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MyApp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "دّل";
+				INFOPLIST_KEY_CFBundleDisplayName = "راصد";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "نحتاج البلوتوث للاتصال بجهاز قراءة السيارة LELink واستقبال بيانات السيارة.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -373,7 +373,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MyApp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "دّل";
+				INFOPLIST_KEY_CFBundleDisplayName = "راصد";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "نحتاج البلوتوث للاتصال بجهاز قراءة السيارة LELink واستقبال بيانات السيارة.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;

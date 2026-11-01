@@ -77,7 +77,7 @@ private struct DalIgnitionArtwork: View {
     private let green = DalLaunchPalette.sage
 
     // تعديل العبارة يكون من هنا.
-    private let tagline = "دَلّك على حال سيارتك"
+    private let tagline = " للإشارة عينٌ، وللرحلة بصيرة."
 
     var body: some View {
         GeometryReader { geometry in
@@ -115,7 +115,7 @@ private struct DalIgnitionArtwork: View {
                         .opacity(appeared ? 1 : 0)
 
                     VStack(spacing: 12) {
-                        Text("دّل")
+                        Text("راصد")
                             .font(
                                 .system(
                                     size: 56,
