@@ -158,15 +158,15 @@ struct ContentView: View {
                 .frame(width: 10, height: 10)
             VStack(alignment: .leading, spacing: 4) {
                 Text("\(vehicle.brand) — \(isConnected ? "متصل" : "غير متصل")")
-                    .font(.subheadline.bold()).foregroundStyle(.white)
-                Text(vehicle.deviceName).font(.caption)
+                    .font(.system(size: 15, weight: .bold)).foregroundStyle(.white)
+                Text(vehicle.deviceName).font(.system(size: 12))
                     .foregroundStyle(Color.white.opacity(0.55))
             }
             Spacer(minLength: 0)
             Button(isConnected ? "حالة الاتصال" : "إعادة الاتصال") {
                 selectedBrand = vehicle.brand
             }
-            .font(.subheadline).foregroundStyle(.white)
+            .font(.system(size: 15)).foregroundStyle(.white)
         }
         .padding(16)
         .background(RoundedRectangle(cornerRadius: 20).fill(Color.black.opacity(0.28)))
