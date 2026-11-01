@@ -11,6 +11,7 @@
 		E21ECD743093B02C00CFA524 /* dashbord.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21ECD723093B02C00CFA524 /* dashbord.swift */; };
 		E21ECD753093B02C00CFA524 /* fuel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21ECD733093B02C00CFA524 /* fuel.swift */; };
 		E21ECD773093B03900CFA524 /* Temp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21ECD763093B03900CFA524 /* Temp.swift */; };
+		E83FA4E33096BE0C00C818FD /* DalLaunchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E83FA4E23096BE0C00C818FD /* DalLaunchView.swift */; };
 		E8AEF0303091DEEA00255D8F /* MyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AEF02D3091DEEA00255D8F /* MyApp.swift */; };
 		E8AEF0313091DEEA00255D8F /* cartype.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AEF02B3091DEEA00255D8F /* cartype.swift */; };
 		E8AEF0323091DEEA00255D8F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E8AEF02A3091DEEA00255D8F /* Assets.xcassets */; };
@@ -29,6 +30,8 @@
 		E21ECD723093B02C00CFA524 /* dashbord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = dashbord.swift; sourceTree = "<group>"; };
 		E21ECD733093B02C00CFA524 /* fuel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = fuel.swift; sourceTree = "<group>"; };
 		E21ECD763093B03900CFA524 /* Temp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Temp.swift; sourceTree = "<group>"; };
+		E83FA4E13096BAC000C818FD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		E83FA4E23096BE0C00C818FD /* DalLaunchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DalLaunchView.swift; sourceTree = "<group>"; };
 		E8AEF02A3091DEEA00255D8F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E8AEF02B3091DEEA00255D8F /* cartype.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = cartype.swift; sourceTree = "<group>"; };
 		E8AEF02D3091DEEA00255D8F /* MyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyApp.swift; sourceTree = "<group>"; };
@@ -72,6 +75,7 @@
 		E8AEF02E3091DEEA00255D8F /* MyApp */ = {
 			isa = PBXGroup;
 			children = (
+				E83FA4E13096BAC000C818FD /* Info.plist */,
 				E21ECD763093B03900CFA524 /* Temp.swift */,
 				E21ECD723093B02C00CFA524 /* dashbord.swift */,
 				E21ECD733093B02C00CFA524 /* fuel.swift */,
@@ -80,6 +84,7 @@
 				E8AEF02A3091DEEA00255D8F /* Assets.xcassets */,
 				E8AEF02B3091DEEA00255D8F /* cartype.swift */,
 				E8AEF02D3091DEEA00255D8F /* MyApp.swift */,
+				E83FA4E23096BE0C00C818FD /* DalLaunchView.swift */,
 			);
 			path = MyApp;
 			sourceTree = "<group>";
@@ -167,6 +172,7 @@
 				E21ECD743093B02C00CFA524 /* dashbord.swift in Sources */,
 				E21ECD753093B02C00CFA524 /* fuel.swift in Sources */,
 				E8AEF03C3091DF6400255D8F /* BluetoothFlowView.swift in Sources */,
+				E83FA4E33096BE0C00C818FD /* DalLaunchView.swift in Sources */,
 				E8AEF03E3091DF6400255D8F /* VehicleModels.swift in Sources */,
 				E8AEF03F3091DF6400255D8F /* BluetoothManager.swift in Sources */,
 				E21ECD713093B01300CFA524 /* Battery.swift in Sources */,
@@ -315,12 +321,16 @@
 		000000000000000111000000 /* Debug configuration for PBXNativeTarget "MyApp" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MyApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "دّل";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "نحتاج البلوتوث للاتصال بجهاز قراءة السيارة LELink واستقبال بيانات السيارة.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -353,12 +363,16 @@
 		000000000000000112000000 /* Release configuration for PBXNativeTarget "MyApp" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MyApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "دّل";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "نحتاج البلوتوث للاتصال بجهاز قراءة السيارة LELink واستقبال بيانات السيارة.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;

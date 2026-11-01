@@ -3,6 +3,8 @@ import SwiftUI
 @main
 struct MyApp: App {
     var body: some Scene {
-        WindowGroup { splash() }
+        WindowGroup {
+            DalLaunchView()
+        }
     }
 }
