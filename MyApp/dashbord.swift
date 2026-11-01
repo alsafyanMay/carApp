@@ -3,8 +3,8 @@
 // استيراد مكتبة SwiftUI
 import SwiftUI
 
-// ⚠️ هذي الصفحة تفتح صفحاتك الأربع، فلازم يكونون في نفس المشروع:
-// EngineTempView.swift و BatteryView.swift و FuelView.swift
+// هذي الصفحة تفتح ثلاث صفحات تفصيلية، فلازم تكون في نفس المشروع:
+// Temp.swift (EngineTempView) و Battery.swift (BatteryView) و fuel.swift (FuelView)
 // وتستخدم الحالات اللي فيهم (TempStatus و BatteryStatus و FuelStatus)
 // القيم تجي من cartype.swift (من obdService.vehicleData)، وتتحدث لحالها كل ما وصلت قراءة جديدة
 
@@ -127,6 +127,25 @@ struct DashboardView: View {
         case .high: return "توقّف في مكان آمن وأطفئ المحرك"
         }
     }
+    // رسالة الوقود تحت الكرت الصغير (قصيرة لأن الكرت نص العرض)
+    private var fuelMessage: String {
+        guard let fuelStatus else { return "القراءة غير متاحة" }
+        switch fuelStatus {
+        case .critical: return "توجّه إلى أقرب محطة"
+        case .low: return "تزوّد في أقرب فرصة"
+        case .normal: return "الوقود كافٍ"
+        }
+    }
+    // رسالة البطارية تحت الكرت الصغير
+    private var batteryMessage: String {
+        guard let batteryStatus else { return "القراءة غير متاحة" }
+        switch batteryStatus {
+        case .low: return "افحص البطارية قريبًا"
+        case .normal: return "الشحن يعمل بشكل سليم"
+        case .high: return "افحص منظّم الجهد"
+        }
+    }
+
     var body: some View {
         // ZStack: الخلفية تحت والمحتوى فوق
         ZStack {
@@ -141,15 +160,18 @@ struct DashboardView: View {
                 VStack(spacing: 0) {
                     // العنوان الرئيسي
                     Text("حالة السيارة")
-                        // خط كبير وعريض
-                        .font(.system(size: 32, weight: .bold))
-                        // مسافة من فوق
-                        .padding(.top, 40)
+                        // خط كبير وعريض (يكبر مع إعدادات النظام)
+                        .font(.largeTitle.bold())
+                        .multilineTextAlignment(.center)
+                        .accessibilityAddTraits(.isHeader)
+                        // مسافة من فوق عشان النص ما يبدأ من أول الصفحة
+                        .padding(.top, 72)
 
                     // حالة الاتصال
                     Text(isConnected ? "سيارتك متصلة وجاهزة للفحص" : "انقطع الاتصال بالسيارة")
                         // خط متوسط
-                        .font(.system(size: 20))
+                        .font(.title3)
+                        .multilineTextAlignment(.center)
                         // لون أفتح شوي
                         .foregroundStyle(.white.opacity(0.9))
                         // مسافة من فوق
@@ -157,18 +179,19 @@ struct DashboardView: View {
 
                     if !isConnected, let lastRecordedAt {
                         Text("آخر قراءة مسجلة: \(lastRecordedAt.formatted(date: .omitted, time: .shortened))")
-                            .font(.system(size: 15))
-                            .foregroundStyle(.white.opacity(0.7))
+                            .font(.subheadline)
+                            .foregroundStyle(.white.opacity(0.85))
                             .padding(.top, 4)
                     }
 
                     // لو انقطع الاتصال: زر يرجّع المستخدم يتصل من جديد
                     if !isConnected {
                         Button("إعادة الاتصال", action: onReconnect)
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.headline)
                             .foregroundStyle(.white)
                             .padding(.horizontal, 24)
-                            .padding(.vertical, 10)
+                            .padding(.vertical, 12)
+                            .frame(minHeight: 44)
                             .background(Capsule().fill(.white.opacity(0.12)))
                             .padding(.top, 12)
                     }
@@ -176,7 +199,8 @@ struct DashboardView: View {
                     // عنوان القسم
                     Text("صحة السيارة")
                         // خط كبير وعريض
-                        .font(.system(size: 30, weight: .bold))
+                        .font(.title.bold())
+                        .accessibilityAddTraits(.isHeader)
                         // على اليمين
                         .frame(maxWidth: .infinity, alignment: .leading)
                         // مسافات
@@ -184,65 +208,71 @@ struct DashboardView: View {
                         .padding(.bottom, 16)
 
                     // 1️⃣ كرت الحرارة العريض
-                    Button { activeSheet = .temperature } label: {
+                    Button { if coolantTemp != nil { activeSheet = .temperature } } label: {
                         DashWideCard(
                             icon: "thermometer.medium",                         // أيقونة الثيرمومتر
                             title: "حرارة المحرك",                              // العنوان
                             value: coolantTemp.map { "\(Int($0))" } ?? "--",   // الرقم (أو -- لو ما فيه قراءة)
                             unit: "°م",                                         // الوحدة
-                            badgeText: tempStatus?.badgeText,                   // الشارة (من صفحة الحرارة)
-                            badgeIcon: tempStatus?.badgeIcon ?? "",             // أيقونة الشارة
+                            badgeText: tempStatus?.badgeText ?? "غير متاح",     // الشارة (من صفحة الحرارة)
+                            badgeIcon: tempStatus?.badgeIcon ?? "minus.circle",  // أيقونة الشارة
                             message: tempMessage,                               // الرسالة تحت
                             tone: tempTone                                      // اللون
                         )
                     }
-                    // لو ما فيه قراءة، الكرت ما ينضغط
-                    .disabled(coolantTemp == nil)
+                    // لو ما فيه قراءة، الكرت ما ينفتح (بدون .disabled عشان ما يبهت وتبقى الشارة ظاهرة)
+                                        .accessibilityHint(coolantTemp == nil ? "" : "اضغط لعرض التفاصيل")
 
                     // 2️⃣ صف فيه الوقود والبطارية جنب بعض
                     HStack(spacing: 12) {
                         // الوقود (أول عنصر = يمين)
-                        Button { activeSheet = .fuel } label: {
+                        Button { if fuelLevel != nil { activeSheet = .fuel } } label: {
                             DashSmallCard(
                                 icon: "fuelpump",                                   // أيقونة المضخة
                                 title: "الوقود",                                     // العنوان
                                 value: fuelLevel.map { "\(Int($0))" } ?? "--",     // الرقم
                                 unit: "%",                                           // الوحدة
-                                badgeText: fuelStatus?.badgeText,                    // الشارة
-                                badgeIcon: fuelStatus?.badgeIcon ?? "",              // أيقونة الشارة
+                                badgeText: fuelStatus?.badgeText ?? "غير متاح",      // الشارة
+                                badgeIcon: fuelStatus?.badgeIcon ?? "minus.circle",   // أيقونة الشارة
+                                message: fuelMessage,                                // الرسالة تحت
                                 tone: fuelTone,                                      // اللون
                                 progress: (fuelLevel ?? 0) / 100                     // الشريط من 0 إلى 1
                             )
                         }
-                        .disabled(fuelLevel == nil)
+                                                .accessibilityHint(fuelLevel == nil ? "" : "اضغط لعرض التفاصيل")
                         // البطارية (يسار)
-                        Button { activeSheet = .battery } label: {
+                        Button { if batteryVoltage != nil { activeSheet = .battery } } label: {
                             DashSmallCard(
                                 icon: "bolt.fill",                                                  // أيقونة البرق
                                 title: "البطارية",                                                   // العنوان
                                 value: batteryVoltage.map { String(format: "%.1f", $0) } ?? "--",  // الرقم بخانة عشرية
                                 unit: "فولت",                                                        // الوحدة
-                                badgeText: batteryStatus?.badgeText,                                 // الشارة
-                                badgeIcon: batteryStatus?.badgeIcon ?? "",                           // أيقونة الشارة
+                                badgeText: batteryStatus?.badgeText ?? "غير متاح",                   // الشارة
+                                badgeIcon: batteryStatus?.badgeIcon ?? "minus.circle",                // أيقونة الشارة
+                                message: batteryMessage,                                             // الرسالة تحت
                                 tone: batteryTone,                                                   // اللون
                                 progress: ((batteryVoltage ?? 11.5) - 11.5) / (16 - 11.5)            // 11.5 فولت فاضي، 16 فل
                             )
                         }
-                        .disabled(batteryVoltage == nil)
+                                                .accessibilityHint(batteryVoltage == nil ? "" : "اضغط لعرض التفاصيل")
                     }
                     // مسافة من فوق
                     .padding(.top, 16)
 
-                    // الجملة اللي في آخر الصفحة
-                    Text("- رحلتك أكثر أمانًا -")
-                        // خط صغير وعريض
-                        .font(.system(size: 15, weight: .semibold))
+                    // تنبيه في آخر الصفحة: التطبيق للاطلاع فقط
+                    Text("القراءات للاطّلاع فقط، ولا تغني عن فحص الورشة.")
+                        .font(.footnote)
+                        .foregroundStyle(.white.opacity(0.8))
+                        .multilineTextAlignment(.center)
                         // مسافة من فوق وتحت
-                        .padding(.top, 50)
+                        .padding(.top, 40)
                         .padding(.bottom, 30)
                 }
                 // حواف الصفحة من الجوانب
                 .padding(.horizontal, 12)
+                // على الآيباد والشاشات العريضة: المحتوى بعرض مريح ويتوسّط الشاشة
+                .frame(maxWidth: 600)
+                .frame(maxWidth: .infinity)
             }
             // كل الأزرار بدون شكلها الافتراضي (الأزرق)
             .buttonStyle(.plain)
@@ -305,9 +335,9 @@ struct DashWideCard: View {
                 // العنوان
                 Text(title)
                     // خط متوسط
-                    .font(.system(size: 20))
+                    .font(.title3)
                     // لون أفتح شوي
-                    .foregroundStyle(.white.opacity(0.85))
+                    .foregroundStyle(.white.opacity(0.9))
                 // يدفع الشارة لليسار
                 Spacer()
                 // الشارة لو فيه نص
@@ -321,15 +351,15 @@ struct DashWideCard: View {
                 // الرقم
                 Text(value)
                     // خط كبير وعريض
-                    .font(.system(size: 36, weight: .bold))
+                    .font(.largeTitle.bold())
                     // يتحرك مثل العداد لما يتغير
                     .contentTransition(.numericText())
                 // الوحدة
                 Text(unit)
                     // خط صغير
-                    .font(.system(size: 15))
+                    .font(.subheadline)
                     // لون باهت
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(.white.opacity(0.85))
             }
             // نزحزح الرقم شوي لداخل مثل التصميم
             .padding(.leading, 40)
@@ -346,15 +376,20 @@ struct DashWideCard: View {
                 // الرسالة
                 Text(message)
                     // خط عريض
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.headline)
+                    .fixedSize(horizontal: false, vertical: true)
                 // يدفع السهم لليسار
                 Spacer()
                 // السهم
                 Image(systemName: "chevron.left")
                     // خط عريض
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.headline)
+                    .accessibilityHidden(true)
             }
         }
+        // VoiceOver يقرأ الكرت كله كعنصر واحد
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(title)، \(value) \(unit)\(badgeText.map { "، \($0)" } ?? "")، \(message)")
         // حواف داخلية
         .padding(16)
         // خلفية متدرجة من لون الخطورة الغامق للأسود
@@ -379,6 +414,7 @@ struct DashSmallCard: View {
     let unit: String        // الوحدة
     let badgeText: String?  // نص الشارة (nil = ما تطلع)
     let badgeIcon: String   // أيقونة الشارة
+    let message: String     // الرسالة تحت الشريط
     let tone: DashTone      // درجة الخطورة
     let progress: Double    // نسبة الشريط من 0 إلى 1
 
@@ -400,7 +436,7 @@ struct DashSmallCard: View {
             // العنوان بلون الخطورة
             Text(title)
                 // خط متوسط
-                .font(.system(size: 17, weight: .semibold))
+                .font(.headline)
                 // بلون الخطورة
                 .foregroundStyle(tone.color)
 
@@ -409,15 +445,15 @@ struct DashSmallCard: View {
                 // الرقم
                 Text(value)
                     // خط كبير
-                    .font(.system(size: 34, weight: .regular))
+                    .font(.title.weight(.regular))
                     // يتحرك مثل العداد
                     .contentTransition(.numericText())
                 // الوحدة
                 Text(unit)
-                    // خط صغير جدًا
-                    .font(.system(size: 12))
+                    // خط صغير
+                    .font(.caption)
                     // لون باهت
-                    .foregroundStyle(.white.opacity(0.6))
+                    .foregroundStyle(.white.opacity(0.85))
             }
             // بالوسط
             .frame(maxWidth: .infinity)
@@ -434,15 +470,27 @@ struct DashSmallCard: View {
                 // مسافة من فوق
                 .padding(.top, 6)
 
-            // السهم بلون الخطورة
-            Image(systemName: "chevron.left")
-                // خط عريض
-                .font(.system(size: 17, weight: .semibold))
-                // بلون الخطورة
-                .foregroundStyle(tone.color)
+            // الرسالة والسهم
+            HStack(alignment: .top, spacing: 4) {
+                // الرسالة
+                Text(message)
+                    .font(.footnote.weight(.semibold))
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                // السهم بلون الخطورة
+                Image(systemName: "chevron.left")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(tone.color)
+                    .accessibilityHidden(true)
+            }
         }
         // حواف داخلية
         .padding(12)
+        // الكرتين جنب بعض بنفس الارتفاع
+        .frame(maxHeight: .infinity, alignment: .top)
+        // VoiceOver يقرأ الكرت كله كعنصر واحد
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(title)، \(value) \(unit)\(badgeText.map { "، \($0)" } ?? "")، \(message)")
         // الخلفية
         .background(
             ZStack {
@@ -471,16 +519,18 @@ struct DashSmallCard: View {
 struct DashIconBox: View {
     let icon: String  // اسم الأيقونة
     let color: Color  // اللون
+    // مقاس المربع يكبر مع إعدادات حجم الخط
+    @ScaledMetric(relativeTo: .body) private var boxSize = 30.0
 
     var body: some View {
         // الأيقونة
         Image(systemName: icon)
             // حجمها
-            .font(.system(size: 16, weight: .semibold))
+            .font(.callout.weight(.semibold))
             // لونها
             .foregroundStyle(color)
             // مقاس المربع
-            .frame(width: 30, height: 30)
+            .frame(width: boxSize, height: boxSize)
             // خلفية بنفس اللون بس شفافة
             .background(RoundedRectangle(cornerRadius: 8).fill(color.opacity(0.25)))
     }
@@ -498,14 +548,15 @@ struct DashBadge: View {
             Image(systemName: icon)
             Text(text)
         }
-        // خط صغير
-        .font(.system(size: 12, weight: .medium))
+        // خط صغير (يكبر مع إعدادات النظام)
+        .font(.caption.weight(.semibold))
         // لون أبيض
         .foregroundStyle(.white)
         // حواف داخلية
         .padding(.horizontal, 8)
         .padding(.vertical, 3)
-        // خلفية كبسولة بلون الشارة
+        // خلفية كبسولة بلون الشارة (أغمق شوي عشان التباين مع النص الأبيض)
+        .background(Capsule().fill(Color.black.opacity(0.35)))
         .background(Capsule().fill(color.opacity(0.55)))
     }
 }
@@ -538,6 +589,8 @@ struct DashProgressBar: View {
         }
         // ارتفاع المساحة
         .frame(height: 12)
+        // الشريط تزييني، والقيمة تنقرأ من الكرت نفسه
+        .accessibilityHidden(true)
         // الشريط يتحرك بنعومة
         .animation(.spring(duration: 0.4), value: progress)
     }

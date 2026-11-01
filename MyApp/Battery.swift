@@ -61,19 +61,19 @@ private enum Tone {
 // MARK: - الخطوط (نفسها في الصفحات الأربع)
 // .system يستخدم خط النظام، وأي نص عربي يطلع تلقائيًا بخط SF Arabic
 private enum AppFont {
-    static let badge = Font.system(size: 13, weight: .medium)                // الشارة
-    static let small = Font.system(size: 13, weight: .regular)               // الوقت
-    static let title = Font.system(size: 22, weight: .bold)                  // العنوان
-    static let subtitle = Font.system(size: 15, weight: .regular)            // النص تحت العنوان
-    static let value = Font.system(size: 40, weight: .bold) // الرقم الكبير
-    static let unit = Font.system(size: 18, weight: .semibold)               // الوحدة جنب الرقم
-    static let gaugeLabel = Font.system(size: 12, weight: .regular)          // عناوين الشريط
-    static let warning = Font.system(size: 16, weight: .medium)              // صندوق التحذير
-    static let rowTitle = Font.system(size: 18, weight: .semibold)           // "ماذا أفعل؟"
-    static let rowBody = Font.system(size: 18, weight: .regular)             // الخطوات
-    static let stepNumber = Font.system(size: 15, weight: .bold)             // رقم الخطوة
-    static let button = Font.system(size: 17, weight: .semibold)             // الأزرار
-    static let note = Font.system(size: 15, weight: .regular)                // جملة الطمأنة
+    static let badge = Font.footnote.weight(.medium)                // الشارة
+    static let small = Font.footnote               // الوقت
+    static let title = Font.title2.bold()                  // العنوان
+    static let subtitle = Font.subheadline            // النص تحت العنوان
+    static let value = Font.largeTitle.bold() // الرقم الكبير
+    static let unit = Font.headline               // الوحدة جنب الرقم
+    static let gaugeLabel = Font.caption          // عناوين الشريط
+    static let warning = Font.callout.weight(.medium)              // صندوق التحذير
+    static let rowTitle = Font.headline           // "ماذا أفعل؟"
+    static let rowBody = Font.body             // الخطوات
+    static let stepNumber = Font.subheadline.bold()             // رقم الخطوة
+    static let button = Font.headline             // الأزرار
+    static let note = Font.subheadline                // جملة الطمأنة
     static let icon = Font.system(size: 60, weight: .regular)                // الأيقونة الكبيرة
 }
 
@@ -314,6 +314,9 @@ struct BatteryView: View {
                 // حواف الجوانب ومن تحت
                 .padding(.horizontal, 20)
                 .padding(.bottom, 30)
+                // على الشاشات العريضة: المحتوى بعرض مريح ويتوسّط
+                .frame(maxWidth: 600)
+                .frame(maxWidth: .infinity)
             }
         }
         // أي تغيير في الحالة يصير بحركة ناعمة
@@ -567,7 +570,7 @@ private extension View {
             .font(AppFont.button)
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
-            .frame(height: 50)
+            .frame(minHeight: 50)
             .background(Capsule().fill(color))
             .shadow(color: color.opacity(0.4), radius: 10, y: 4)
     }
@@ -578,7 +581,7 @@ private extension View {
             .font(AppFont.button)
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
-            .frame(height: 50)
+            .frame(minHeight: 50)
             .overlay(Capsule().stroke(color, lineWidth: 1.5))
     }
 }
@@ -657,7 +660,7 @@ private struct StatusGauge: View {
                 Text("مرتفع")
             }
             .font(AppFont.gaugeLabel)
-            .foregroundStyle(.white.opacity(0.7))
+            .foregroundStyle(.white.opacity(0.85))
         }
         // الدائرة تتزحلق بنعومة
         .animation(.spring(duration: 0.4), value: value)
@@ -689,6 +692,10 @@ private struct ExpandableRow: View {
             }
             // كامل الصف ينضغط
             .contentShape(Rectangle())
+            // VoiceOver: الصف زر، وحالته مفتوح أو مغلق
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityValue(isExpanded ? "مفتوح" : "مغلق")
             .onTapGesture {
                 withAnimation(.easeInOut(duration: 0.25)) {
                     isExpanded.toggle()

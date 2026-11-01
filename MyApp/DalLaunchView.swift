@@ -29,7 +29,7 @@ private enum DalLaunchPalette {
     }
 }
 
-// شاشة البداية الجديدة، ثم تنتقل إلى splash الموجودة عندكم.
+// شاشة البداية الجديدة، ثم تنتقل إلى SplashView الموجودة عندكم.
 struct DalLaunchView: View {
     @Environment(\.accessibilityReduceMotion)
     private var reduceMotion
@@ -42,7 +42,7 @@ struct DalLaunchView: View {
                 .ignoresSafeArea()
 
             if finished {
-                splash()
+                SplashView()
                     .transition(.opacity)
             } else {
                 DalIgnitionArtwork {

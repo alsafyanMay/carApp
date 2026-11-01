@@ -28,7 +28,7 @@ struct BluetoothFlowView: View {
                     Spacer(minLength: 0)
                     if isDemo {
                         Text("وضع تجربة الواجهات — لا اتصال ولا قراءات حقيقية")
-                            .font(.system(size: 12)).foregroundStyle(.white)
+                            .font(.caption).foregroundStyle(.white)
                             .multilineTextAlignment(.center).padding(.horizontal, 24)
                     }
                     content
@@ -112,10 +112,10 @@ struct BluetoothFlowView: View {
             VStack(spacing: 20) {
                 adapterIllustration
                 Text("جهّز جهاز قراءة السيارة")
-                    .font(.system(size: 22, weight: .bold)).foregroundStyle(.white)
+                    .font(.title2.bold()).foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                 Text("تحتاج جهاز LELink لقراءة بيانات سيارتك. بلوتوث السيارة وحده لا يكفي.")
-                    .font(.system(size: 17)).foregroundStyle(CarVisualStyle.secondaryText)
+                    .font(.body).foregroundStyle(CarVisualStyle.secondaryText)
                     .multilineTextAlignment(.center)
                 ConnectionSteps(steps: [
                     "أوقف السيارة وأطفئ الإشعال، ثم ركّب الجهاز حسب تعليماته في منفذ OBD-II، غالبًا أسفل المقود.",
@@ -125,7 +125,7 @@ struct BluetoothFlowView: View {
                 Button("البحث عن الجهاز", action: requestSearch)
                     .buttonStyle(PrimaryPopupButtonStyle())
                 Text("لا تملك الجهاز؟ ستحتاج إليه لعرض قراءات سيارتك.")
-                    .font(.system(size: 15)).foregroundStyle(CarVisualStyle.secondaryText)
+                    .font(.subheadline).foregroundStyle(CarVisualStyle.secondaryText)
                     .multilineTextAlignment(.center)
             }
         }
@@ -145,10 +145,10 @@ struct BluetoothFlowView: View {
         card {
             VStack(spacing: 20) {
                 Text("اختر جهاز قراءة السيارة")
-                    .font(.system(size: 20, weight: .bold)).foregroundStyle(.white)
+                    .font(.title3.bold()).foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                 Text("اختر جهاز LELink المركّب في سيارتك.")
-                    .font(.system(size: 15)).foregroundStyle(Color.white.opacity(0.68))
+                    .font(.subheadline).foregroundStyle(CarVisualStyle.secondaryText)
                     .multilineTextAlignment(.center)
                 if isDemo {
                     deviceRow(OBDDevice(id: demoDeviceID, name: "LELink — جهاز تجريبي", signalStrength: -50))
@@ -156,13 +156,13 @@ struct BluetoothFlowView: View {
                     if bluetoothManager.state == .scanning || bluetoothManager.state == .waitingForPermission {
                         HStack(spacing: 10) {
                             ProgressView().tint(.white)
-                            Text("جارٍ البحث عن الأجهزة القريبة…").font(.system(size: 15))
-                        }.foregroundStyle(Color.white.opacity(0.68))
+                            Text("جارٍ البحث عن الأجهزة القريبة…").font(.subheadline)
+                        }.foregroundStyle(CarVisualStyle.secondaryText)
                     }
                     ForEach(bluetoothManager.devices) { device in deviceRow(device) }
                     if bluetoothManager.state == .scanFinished, bluetoothManager.devices.isEmpty {
                         Text("لم نعثر على جهاز. تأكد من تركيبه وتشغيل إشعال السيارة، وأغلق أي تطبيق آخر متصل به.")
-                            .font(.system(size: 15)).foregroundStyle(Color.white.opacity(0.72))
+                            .font(.subheadline).foregroundStyle(CarVisualStyle.secondaryText)
                             .multilineTextAlignment(.center)
                     }
                     if bluetoothManager.state == .scanFinished {
@@ -194,13 +194,13 @@ struct BluetoothFlowView: View {
                     .frame(width: 40, height: 40)
                     .background(Circle().fill(Color.white.opacity(0.08)))
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(device.name).font(.system(size: 17, weight: .semibold))
-                    Text("معرّف: \(device.shortID)").font(.system(size: 12))
-                        .foregroundStyle(Color.white.opacity(0.55))
+                    Text(device.name).font(.headline)
+                    Text("معرّف: \(device.shortID)").font(.caption)
+                        .foregroundStyle(CarVisualStyle.secondaryText)
                     if !isDemo, let saved = SavedVehicle.load(), saved.brand == carName,
                        saved.deviceID == device.id {
-                        Text("الجهاز المحفوظ لهذه السيارة").font(.system(size: 12))
-                            .foregroundStyle(Color.white.opacity(0.68))
+                        Text("الجهاز المحفوظ لهذه السيارة").font(.caption)
+                            .foregroundStyle(CarVisualStyle.secondaryText)
                     }
                 }
                 Spacer(minLength: 0)
@@ -234,23 +234,23 @@ struct BluetoothFlowView: View {
             VStack(spacing: 20) {
                 // أيقونة تحذير
                 Image(systemName: "exclamationmark.triangle")
-                    .font(.system(size: 28)).foregroundStyle(Color(red: 0.87, green: 0.57, blue: 0.54))
+                    .font(.system(size: 28)).foregroundStyle(CarVisualStyle.warning)
                     .frame(width: 56, height: 56)
                     .background(Circle().fill(Color.white.opacity(0.07)))
                     .accessibilityHidden(true)
                 // العنوان
                 Text("السيارة المتصلة ليست \(carName)")
-                    .font(.system(size: 22, weight: .bold)).foregroundStyle(.white)
+                    .font(.title2.bold()).foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                 // الشرح
                 Text(mismatchMessage)
-                    .font(.system(size: 17)).foregroundStyle(CarVisualStyle.secondaryText)
+                    .font(.body).foregroundStyle(CarVisualStyle.secondaryText)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
                 // رقم الهيكل (يساعد المستخدم يتأكد)
                 if let vin = obdService.vin {
                     Text("رقم الهيكل: \(vin)")
-                        .font(.system(size: 12)).foregroundStyle(Color.white.opacity(0.55))
+                        .font(.caption).foregroundStyle(CarVisualStyle.secondaryText)
                         .environment(\.layoutDirection, .leftToRight)
                 }
                 // يرجع يختار الشركة الصحيحة
@@ -381,10 +381,10 @@ struct BluetoothFlowView: View {
             .padding(8)
             .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.08)))
             VStack(spacing: 4) {
-                Text("LELink").font(.system(size: 17, weight: .semibold))
-                Text("OBD-II").font(.system(size: 12)).foregroundStyle(Color.white.opacity(0.55))
+                Text("LELink").font(.headline)
+                Text("OBD-II").font(.caption).foregroundStyle(CarVisualStyle.secondaryText)
             }
-            .foregroundStyle(.white).frame(width: 112, height: 55)
+            .foregroundStyle(.white).frame(minWidth: 112, minHeight: 55)
             .background(RoundedRectangle(cornerRadius: 12).fill(Color.black.opacity(0.28)))
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.14)))
         }

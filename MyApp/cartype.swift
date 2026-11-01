@@ -24,11 +24,12 @@ struct ContentView: View {
         _obdService = StateObject(wrappedValue: OBDService(bluetoothManager: manager))
     }
 
-    let carBrands = [
-        ("تويوتا", "Image"),
-        ("شانجان", "Image 1"),
-        ("هافال", "Image 2"),
-        ("شركة أخرى", "")
+    // الرقم الثالث: عرض الصورة بحيث يطلع المربع الغامق في كل شعار بنفس الحجم (68)
+    // (مربع تويوتا في صورته أكبر شوي من شانجان، فشانجان تتكبّر أكثر)
+    let carBrands: [(String, String, CGFloat)] = [
+        ("تويوتا", "Image", 77),
+        ("شانجان", "Image 1", 81),
+        ("شركة أخرى", "", 68)
     ]
 
     var body: some View {
@@ -107,13 +108,14 @@ struct ContentView: View {
                 Text("اختر شركة سيارتك:")
                     .font(.system(size: 36, weight: .bold))
                     .foregroundColor(.white)
-                    .padding(.top, 28)
+                    // مسافة من فوق عشان العنوان ما يلصق بأعلى الشاشة
+                    .padding(.top, 72)
                     .padding(.horizontal, 4)
 
                 // البطاقات
                 VStack(spacing: 16) {
                     ForEach(carBrands, id: \.0) { brand in
-                        BrandCard(name: brand.0, imageName: brand.1) {
+                        BrandCard(name: brand.0, imageName: brand.1, imageWidth: brand.2) {
                             beginConnection(for: brand.0)
                         }
                     }
@@ -178,29 +180,52 @@ struct ContentView: View {
 struct BrandCard: View {
     let name: String
     let imageName: String
+    // عرض الصورة قبل القص إلى 68×68
+    let imageWidth: CGFloat
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 22) {
                 if imageName.isEmpty {
+                    // نفس مربع الشعارات: أخضر غامق مع لمعة خفيفة من فوق، وسيارة بيضاء
                     Image(systemName: "car.side.fill")
                         .font(.system(size: 28))
-                        .foregroundStyle(Color.white.opacity(0.72))
+                        .foregroundStyle(.white)
                         .frame(width: 68, height: 68)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.08)))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.15)))
+                        .background(
+                            ZStack {
+                                LinearGradient(
+                                    colors: [Color(red: 0.18, green: 0.26, blue: 0.22),
+                                             Color(red: 0.08, green: 0.14, blue: 0.12)],
+                                    startPoint: .top, endPoint: .bottom)
+                                // لمعة في الزاوية العليا اليسرى مثل الشعارات
+                                // (.topTrailing لأن الصفحة RTL، فهي الزاوية اليسرى الفعلية)
+                                RadialGradient(
+                                    colors: [Color.white.opacity(0.2), .clear],
+                                    center: .topTrailing,
+                                    startRadius: 0, endRadius: 40)
+                            }
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                        )
+                        .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
                 } else {
-                Image(imageName)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 68, height: 68)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.white.opacity(0.15), lineWidth: 1)
-                    )
-                    .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
+                    // كل الأيقونات بنفس المقاس 68×68
+                    Image(imageName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: imageWidth, height: imageWidth)
+                        .frame(width: 68, height: 68)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                        )
+                        .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
                 }
 
                 Text(name)

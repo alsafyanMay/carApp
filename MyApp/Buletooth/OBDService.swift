@@ -158,6 +158,10 @@ final class OBDService: ObservableObject {
         timeoutTask?.cancel()
         currentCommand = nil
         let upper = response.uppercased()
+        #if DEBUG
+        // للتشخيص: نطبع رد الجهاز الخام لكل أمر (ابحثي في الكونسول عن "OBD>")
+        print("OBD> \(command) ←", upper.replacingOccurrences(of: "\r", with: "⏎").replacingOccurrences(of: "\n", with: "⏎"))
+        #endif
         let errors = ["UNABLE TO CONNECT", "CAN ERROR", "BUS ERROR", "BUS INIT: ERROR", "STOPPED"]
         if errors.contains(where: { upper.contains($0) }) {
             fail("تم الاتصال بقطعة الفحص، لكن تعذر التواصل مع كمبيوتر السيارة. تأكد أن سويتش السيارة في وضع التشغيل (Ignition ON) وليس فقط وضع الملحقات (ACC).")

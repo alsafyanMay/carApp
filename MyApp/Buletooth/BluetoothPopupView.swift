@@ -1,8 +1,13 @@
 import SwiftUI
 
 enum CarVisualStyle {
-    // Approximation sampled from the supplied Sketch screenshot, not a Sketch token export.
-    static let popup = Color(red: 28/255, green: 34/255, blue: 33/255)
+    // نفس ألوان الصفحات الرئيسية (الداش بورد وصفحات التفاصيل) عشان البوب اب ما يطلع بلون غريب
+    // خلفية البوب اب: نفس خلفية كروت الداش بورد (dashCard)
+    static let popup = Color(red: 27/255, green: 32/255, blue: 29/255)
+    // ألوان الحالة: نفس الألوان الفاتحة (accent) المستخدمة في صفحات الحرارة والبطارية والوقود
+    static let success = Color(red: 143/255, green: 209/255, blue: 158/255)
+    static let danger = Color(red: 242/255, green: 167/255, blue: 167/255)
+    static let warning = Color(red: 224/255, green: 178/255, blue: 90/255)
     static let secondaryText = Color(red: 173/255, green: 190/255, blue: 180/255)
     static let background = LinearGradient(stops: [
         .init(color: Color(red: 0.14, green: 0.17, blue: 0.14), location: 0),
@@ -51,7 +56,7 @@ struct ConnectionSteps: View {
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .font(.system(size: 17))
+                .font(.body)
                 .foregroundStyle(CarVisualStyle.secondaryText)
                 .padding(16)
             }
@@ -119,17 +124,17 @@ struct BluetoothPopupView: View {
             title(progressTitle)
             message(progressMessage)
         case .connected(let carName):
-            connectionIcon(color: Color(red: 0.60, green: 0.75, blue: 0.64))
+            connectionIcon(color: CarVisualStyle.success)
             title(successTitle)
             HStack(spacing: 10) {
-                Circle().fill(Color(red: 0.60, green: 0.75, blue: 0.64)).frame(width: 12, height: 12)
+                Circle().fill(CarVisualStyle.success).frame(width: 12, height: 12)
                 Text(carName)
             }
             .foregroundStyle(.white).padding(.horizontal, 18).padding(.vertical, 10)
             .background(Capsule().fill(Color.white.opacity(0.08)))
             if !successMessage.isEmpty { message(successMessage) }
         case .failed(let text):
-            connectionIcon(color: Color(red: 0.87, green: 0.57, blue: 0.54))
+            connectionIcon(color: CarVisualStyle.danger)
             title(failureTitle)
             if !text.isEmpty { message(text) }
             if !failureSteps.isEmpty { ConnectionSteps(steps: failureSteps) }
@@ -143,12 +148,12 @@ struct BluetoothPopupView: View {
     }
 
     private func title(_ text: String) -> some View {
-        Text(text).font(.system(size: 22, weight: .bold)).foregroundStyle(.white)
+        Text(text).font(.title2.bold()).foregroundStyle(.white)
             .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
             .accessibilityAddTraits(.isHeader)
     }
     private func message(_ text: String) -> some View {
-        Text(text).font(.system(size: 17)).foregroundStyle(CarVisualStyle.secondaryText)
+        Text(text).font(.body).foregroundStyle(CarVisualStyle.secondaryText)
             .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
     }
     private var bluetoothIcon: some View {
@@ -171,7 +176,7 @@ struct BluetoothPopupView: View {
 
 struct PrimaryPopupButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label.font(.system(size: 20, weight: .medium)).foregroundStyle(.black)
+        configuration.label.font(.title3.weight(.medium)).foregroundStyle(.black)
             .frame(maxWidth: .infinity, minHeight: 48)
             .padding(.horizontal, 12).padding(.vertical, 2)
             .background(Capsule().fill(Color.white.opacity(configuration.isPressed ? 0.75 : 1)))
@@ -179,7 +184,7 @@ struct PrimaryPopupButtonStyle: ButtonStyle {
 }
 struct SecondaryPopupButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label.font(.system(size: 17)).foregroundStyle(.white)
+        configuration.label.font(.body).foregroundStyle(.white)
             .frame(maxWidth: .infinity, minHeight: 48)
             .background(Capsule().fill(Color.white.opacity(configuration.isPressed ? 0.14 : 0.07)))
             .overlay(Capsule().stroke(Color.white.opacity(0.20)))
