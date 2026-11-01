@@ -163,15 +163,6 @@ private extension BatteryStatus {
         }
     }
 
-    // الوقت اللي فوق يسار الكرت (نص مؤقت: لاحقًا يجي من وقت آخر قراءة)
-    var timeText: String {
-        switch self {
-        case .low: return "خلال هذه الرحلة"
-        case .normal: return "قبل دقيقة"
-        case .high: return "خلال هذه الرحلة"
-        }
-    }
-
     // نص صندوق التحذير (nil = ما فيه صندوق)
     var warning: String? {
         switch self {
@@ -249,6 +240,8 @@ struct BatteryView: View {
 
     // القيمة تجي من برا (من الداش بورد أو صفحة التجربة)
     var voltage: Double = 14.0
+    // وقت آخر قراءة (nil = ما نعرضه)
+    var recordedAt: Date? = nil
 
     // الحالة تنحسب من القيمة كل ما تتغير
     private var status: BatteryStatus {
@@ -266,7 +259,9 @@ struct BatteryView: View {
     @Environment(\.dismiss) private var dismiss
 
     // وقت التذكير المحفوظ (0 = ما فيه تذكير)، و @AppStorage يحفظه داخل الجوال
-    @AppStorage("batteryReminder") private var reminderTime: Double = 0
+    @AppStorage(BatteryReminder.timeKey) private var reminderTime: Double = 0
+    // هل التذكير شغّال؟ يبقى شغّال (يتكرر يوميًا) لين تنحل المشكلة أو يلغيه المستخدم
+    @AppStorage(BatteryReminder.activeKey) private var reminderActive = false
 
     var body: some View {
         // الخلفية تحت والمحتوى فوق
@@ -321,6 +316,8 @@ struct BatteryView: View {
         }
         // أي تغيير في الحالة يصير بحركة ناعمة
         .animation(.easeInOut(duration: 0.35), value: status)
+        // الجهد رجع طبيعي: نوقف التذكير
+        .onChange(of: voltage) { _, newValue in BatteryReminder.cancelIfSolved(voltage: newValue) }
         // اتجاه من اليمين لليسار
         .environment(\.layoutDirection, .rightToLeft)
         // الوضع الداكن
@@ -346,9 +343,10 @@ struct BatteryView: View {
                 Spacer()
 
                 // الوقت
-                Text(status.timeText)
+                // وقت آخر قراءة فعلي من السيارة (يتحدث كل ثانية)
+                LastReadingLabel(date: recordedAt)
                     .font(AppFont.small)
-                    .foregroundStyle(.white.opacity(0.8))
+                    .foregroundStyle(.white.opacity(0.85))
             }
 
             // الأيقونة الكبيرة (تتبدل بحركة لما تتغير الحالة)
@@ -497,25 +495,31 @@ struct BatteryView: View {
             } label: {
                 HStack(spacing: 10) {
                     // جرس مليان لو فيه تذكير
-                    Image(systemName: reminderDate == nil ? "bell" : "bell.fill")
-                    Text(reminderDate == nil ? "ذكّرني بالفحص" : "تغيير وقت التذكير")
+                    Image(systemName: reminderActive ? "bell.fill" : "bell")
+                    Text(reminderActive ? "تغيير وقت التذكير" : "ذكّرني بالفحص")
                 }
                 .secondaryButtonStyle(color: status.tone.button)
             }
 
             // لو فيه تذكير: وقته وزر الإلغاء
-            if let date = reminderDate {
-                Text("سنذكّرك: \(date.formatted(date: .abbreviated, time: .shortened))")
+            if reminderActive {
+                if let date = reminderDate {
+                    Text("أول تذكير: \(date.formatted(date: .abbreviated, time: .shortened))")
+                        .font(AppFont.small)
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+                Text("سنذكّرك كل يوم حتى يعود جهد البطارية إلى الوضع الطبيعي.")
                     .font(AppFont.small)
-                    .foregroundStyle(.white.opacity(0.8))
+                    .foregroundStyle(.white.opacity(0.85))
+                    .multilineTextAlignment(.center)
                 Button("إلغاء التذكير") { cancelReminder() }
                     .font(AppFont.small)
-                    .foregroundStyle(.white.opacity(0.6))
+                    .foregroundStyle(.white.opacity(0.85))
             }
         }
     }
 
-    // وقت التذكير كتاريخ، أو nil لو ما فيه أو وقته فات
+    // وقت أول تذكير كتاريخ، أو nil لو فات (التذكيرات اللي بعده تستمر يوميًا)
     private var reminderDate: Date? {
         let date = Date(timeIntervalSince1970: reminderTime)
         return date > .now ? date : nil
@@ -528,37 +532,102 @@ struct BatteryView: View {
         return calendar.date(bySettingHour: 9, minute: 0, second: 0, of: tomorrow)!
     }
 
-    // نجدول الإشعار (محلي: الجوال يجدوله بدون نت)
+    // نجدول التذكير (محلي: الجوال يجدوله بدون نت)
     private func scheduleReminder(at date: Date) {
         // نحفظ الوقت عشان نعرضه تحت الزر
         reminderTime = date.timeIntervalSince1970
-
-        // محتوى الإشعار
-        let content = UNMutableNotificationContent()
-        content.title = status.title
-        content.body = status.reminderText
-        content.sound = .default
-
-        // متى يطلع: في التاريخ المحدد، مرة وحدة
-        let parts = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
-        let trigger = UNCalendarNotificationTrigger(dateMatching: parts, repeats: false)
-        let request = UNNotificationRequest(identifier: "batteryReminder", content: content, trigger: trigger)
-
-        // Task: ينتظر رد المستخدم على الإذن بدون ما يوقف الشاشة
-        Task {
-            let center = UNUserNotificationCenter.current()
-            let granted = (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
-            guard granted else { return }
-            // نشيل التذكير القديم ونحط الجديد
-            center.removePendingNotificationRequests(withIdentifiers: ["batteryReminder"])
-            try? await center.add(request)
-        }
+        reminderActive = true
+        let title = status.title
+        let body = status.reminderText
+        Task { await BatteryReminder.schedule(from: date, title: title, body: body) }
     }
 
     // نلغي التذكير
     private func cancelReminder() {
-        reminderTime = 0
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["batteryReminder"])
+        BatteryReminder.cancel()
+    }
+}
+
+// MARK: - تذكير فحص البطارية (يتكرر يوميًا لين تنحل المشكلة)
+// الإشعارات المحلية ما تقدر تفحص القراءة والتطبيق مقفل، فنجدول تذكيرات يومية لمدة أسبوعين،
+// ونلغيها كلها أول ما التطبيق يشوف إن الجهد رجع طبيعي أو المستخدم يلغيها
+enum BatteryReminder {
+    static let timeKey = "batteryReminder"
+    static let activeKey = "batteryReminderActive"
+    private static let days = 14
+    private static let center = UNUserNotificationCenter.current()
+
+    // أرقام الإشعارات (القديم "batteryReminder" نحذفه معهم)
+    private static var identifiers: [String] {
+        ["batteryReminder"] + (0..<days).map { "batteryReminder.\($0)" }
+    }
+
+    // أزرار الإشعار (مثل المنبه): تظهر لما يسحب المستخدم الإشعار أو يضغط عليه ضغطة طويلة
+    static let categoryID = "batteryReminderCategory"
+    static let snoozeActionID = "batteryReminderSnooze"
+    static let doneActionID = "batteryReminderDone"
+    // مدة "أعد التذكير" (بالثواني)
+    private static let snoozeInterval: TimeInterval = 60 * 60
+
+    // نسجّل الأزرار عند تشغيل التطبيق
+    static func registerActions() {
+        let snooze = UNNotificationAction(identifier: snoozeActionID, title: "ذكّرني بعد ساعة", options: [])
+        // "تم الفحص" يوقف التذكير كله
+        let done = UNNotificationAction(identifier: doneActionID, title: "تم الفحص", options: [])
+        let category = UNNotificationCategory(identifier: categoryID, actions: [snooze, done],
+                                              intentIdentifiers: [], options: [])
+        center.setNotificationCategories([category])
+    }
+
+    // ضغط المستخدم زر من أزرار الإشعار
+    static func handle(actionID: String, title: String, body: String) async {
+        switch actionID {
+        case snoozeActionID:
+            let first = Date.now.addingTimeInterval(snoozeInterval)
+            UserDefaults.standard.set(first.timeIntervalSince1970, forKey: timeKey)
+            UserDefaults.standard.set(true, forKey: activeKey)
+            await schedule(from: first, title: title, body: body)
+        case doneActionID:
+            cancel()
+        default:
+            break
+        }
+    }
+
+    static func schedule(from first: Date, title: String, body: String) async {
+        registerActions()
+        let granted = (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
+        guard granted else { return }
+        // نشيل القديم ونحط الجديد
+        center.removePendingNotificationRequests(withIdentifiers: identifiers)
+        let calendar = Calendar.current
+        for day in 0..<days {
+            guard let date = calendar.date(byAdding: .day, value: day, to: first) else { continue }
+            let content = UNMutableNotificationContent()
+            content.title = title
+            content.body = body
+            content.sound = .default
+            content.categoryIdentifier = categoryID
+            let parts = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: date)
+            let trigger = UNCalendarNotificationTrigger(dateMatching: parts, repeats: false)
+            try? await center.add(UNNotificationRequest(identifier: "batteryReminder.\(day)",
+                                                        content: content, trigger: trigger))
+        }
+    }
+
+    // نلغي كل التذكيرات (المجدولة والظاهرة) ونصفّر الحالة
+    static func cancel() {
+        center.removePendingNotificationRequests(withIdentifiers: identifiers)
+        center.removeDeliveredNotifications(withIdentifiers: identifiers)
+        UserDefaults.standard.set(0.0, forKey: timeKey)
+        UserDefaults.standard.set(false, forKey: activeKey)
+    }
+
+    // المشكلة انحلت (الجهد ما عاد منخفض)؟ نوقف التذكير
+    static func cancelIfSolved(voltage: Double?) {
+        guard UserDefaults.standard.bool(forKey: activeKey),
+              let voltage, BatteryStatus(voltage: voltage) != .low else { return }
+        cancel()
     }
 }
 
@@ -812,3 +881,28 @@ private struct DemoView: View {
 #Preview("بطارية - منخفض") { BatteryView(voltage: 12.1) }
 #Preview("بطارية - طبيعي") { BatteryView(voltage: 14.0) }
 #Preview("بطارية - مرتفع") { BatteryView(voltage: 15.2) }
+
+// MARK: - مستقبل الإشعارات (أزرار الإشعار + إظهاره والتطبيق مفتوح)
+final class NotificationHandler: NSObject, UNUserNotificationCenterDelegate {
+    static let shared = NotificationHandler()
+
+    // نسجّل المستقبل والأزرار مرة وحدة عند تشغيل التطبيق
+    static func install() {
+        UNUserNotificationCenter.current().delegate = shared
+        BatteryReminder.registerActions()
+    }
+
+    // يظهر الإشعار حتى لو التطبيق مفتوح
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
+        [.banner, .sound]
+    }
+
+    // ضغط المستخدم على الإشعار أو على أحد أزراره
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                didReceive response: UNNotificationResponse) async {
+        let content = response.notification.request.content
+        await BatteryReminder.handle(actionID: response.actionIdentifier,
+                                     title: content.title, body: content.body)
+    }
+}

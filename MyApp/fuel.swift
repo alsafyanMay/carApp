@@ -161,15 +161,6 @@ private extension FuelStatus {
         }
     }
 
-    // الوقت اللي فوق يسار الكرت (نص مؤقت: لاحقًا يجي من وقت آخر قراءة)
-    var timeText: String {
-        switch self {
-        case .critical: return "خلال هذه الرحلة"
-        case .low: return "خلال هذه الرحلة"
-        case .normal: return "قبل دقيقة"
-        }
-    }
-
     // نص صندوق التحذير (nil = ما فيه صندوق)
     var warning: String? {
         switch self {
@@ -226,6 +217,8 @@ struct FuelView: View {
 
     // القيمة تجي من برا (من الداش بورد أو صفحة التجربة)
     var level: Double = 20
+    // وقت آخر قراءة (nil = ما نعرضه)
+    var recordedAt: Date? = nil
 
     // الحالة تنحسب من القيمة كل ما تتغير
     private var status: FuelStatus {
@@ -320,9 +313,10 @@ struct FuelView: View {
                 Spacer()
 
                 // الوقت
-                Text(status.timeText)
+                // وقت آخر قراءة فعلي من السيارة (يتحدث كل ثانية)
+                LastReadingLabel(date: recordedAt)
                     .font(AppFont.small)
-                    .foregroundStyle(.white.opacity(0.8))
+                    .foregroundStyle(.white.opacity(0.85))
             }
 
             // الأيقونة الكبيرة (تتبدل بحركة لما تتغير الحالة)

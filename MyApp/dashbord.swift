@@ -283,6 +283,9 @@ struct DashboardView: View {
         .environment(\.layoutDirection, .rightToLeft)
         // الوضع الداكن
         .preferredColorScheme(.dark)
+        // لو الجهد رجع طبيعي نوقف تذكير فحص البطارية (يتكرر يوميًا لين تنحل المشكلة)
+        .onChange(of: batteryVoltage) { _, voltage in BatteryReminder.cancelIfSolved(voltage: voltage) }
+        .onAppear { BatteryReminder.cancelIfSolved(voltage: batteryVoltage) }
         // لو انقطع الاتصال وما فيه أي قراءة محفوظة، نسكّر الشيت
         .onChange(of: isConnected) { _, connected in
             if !connected && coolantTemp == nil && fuelLevel == nil && batteryVoltage == nil {
@@ -295,9 +298,9 @@ struct DashboardView: View {
             Group {
                 switch sheet {
                 // ?? 0 للاحتياط بس: الكرت أصلًا ما ينضغط لو القيمة nil
-                case .temperature: EngineTempView(temperature: coolantTemp ?? 0)
-                case .battery: BatteryView(voltage: batteryVoltage ?? 0)
-                case .fuel: FuelView(level: fuelLevel ?? 0)
+                case .temperature: EngineTempView(temperature: coolantTemp ?? 0, recordedAt: lastRecordedAt)
+                case .battery: BatteryView(voltage: batteryVoltage ?? 0, recordedAt: lastRecordedAt)
+                case .fuel: FuelView(level: fuelLevel ?? 0, recordedAt: lastRecordedAt)
                 }
             }
             // نص الشاشة وكامل الشاشة
@@ -605,4 +608,27 @@ struct DashProgressBar: View {
 // السيارة ما تدعم أي قراءة، أو الاتصال انقطع
 #Preview("داش بورد - بدون قراءات") {
     DashboardView(isConnected: false)
+}
+
+// MARK: - وقت آخر قراءة (يتحدث كل ثانية)
+// يُستخدم في صفحات الحرارة والبطارية والوقود. مثال: "آخر قراءة: قبل 5 ثوانٍ"
+struct LastReadingLabel: View {
+    let date: Date?
+
+    // العربية بأرقام إنجليزية (مثل بقية التطبيق)، و.named يعطي "الآن" بدل "قبل 0 ثانية"
+    private static let formatter: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.locale = Locale(identifier: "ar-u-nu-latn")
+        formatter.unitsStyle = .full
+        formatter.dateTimeStyle = .named
+        return formatter
+    }()
+
+    var body: some View {
+        if let date {
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                Text("آخر قراءة: \(Self.formatter.localizedString(for: min(date, context.date), relativeTo: context.date))")
+            }
+        }
+    }
 }

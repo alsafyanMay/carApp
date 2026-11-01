@@ -38,6 +38,7 @@ struct BluetoothFlowView: View {
                 .frame(maxWidth: .infinity, minHeight: geometry.size.height)
             }
         }
+        // طبقة غامقة خلف البوب أب عشان الصفحة تتراجع ويبرز البوب أب
         .background(Color.black.opacity(0.22).ignoresSafeArea())
         .environment(\.layoutDirection, .rightToLeft)
         .preferredColorScheme(.dark)
@@ -108,7 +109,7 @@ struct BluetoothFlowView: View {
     // MARK: - Prepare the Adapter
 
     private var setup: some View {
-        card {
+        card(elevated: true) {
             VStack(spacing: 20) {
                 adapterIllustration
                 Text("جهّز جهاز قراءة السيارة")
@@ -121,7 +122,7 @@ struct BluetoothFlowView: View {
                     "أوقف السيارة وأطفئ الإشعال، ثم ركّب الجهاز حسب تعليماته في منفذ OBD-II، غالبًا أسفل المقود.",
                     "شغّل إشعال السيارة والبلوتوث في هاتفك.",
                     "ابقَ بالقرب من السيارة واختر جهازك في الخطوة التالية."
-                ])
+                ], elevated: true)
                 Button("البحث عن الجهاز", action: requestSearch)
                     .buttonStyle(PrimaryPopupButtonStyle())
                 Text("لا تملك الجهاز؟ ستحتاج إليه لعرض قراءات سيارتك.")
@@ -407,8 +408,8 @@ struct BluetoothFlowView: View {
         }
     }
 
-    private func card<Content: View>(@ViewBuilder content: @escaping () -> Content) -> some View  {
-        ConnectionCard(onClose: cancelFlow, content: content).padding(.horizontal, 24)
+    private func card<Content: View>(elevated: Bool = true, @ViewBuilder content: @escaping () -> Content) -> some View  {
+        ConnectionCard(onClose: cancelFlow, elevated: elevated, content: content).padding(.horizontal, 24)
     }
 }
 

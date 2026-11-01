@@ -161,15 +161,6 @@ private extension TempStatus {
         }
     }
 
-    // الوقت اللي فوق يسار الكرت (نص مؤقت: لاحقًا يجي من وقت آخر قراءة)
-    var timeText: String {
-        switch self {
-        case .cold: return "قبل دقيقة"
-        case .normal: return "قبل دقيقة"
-        case .high: return "بدأ قبل 4 دقائق"
-        }
-    }
-
     // نص صندوق التحذير (nil = ما فيه صندوق)
     var warning: String? {
         switch self {
@@ -229,6 +220,8 @@ struct EngineTempView: View {
 
     // القيمة تجي من برا (من الداش بورد أو صفحة التجربة)
     var temperature: Double = 118
+    // وقت آخر قراءة (nil = ما نعرضه)
+    var recordedAt: Date? = nil
 
     // الحالة تنحسب من القيمة كل ما تتغير
     private var status: TempStatus {
@@ -323,9 +316,10 @@ struct EngineTempView: View {
                 Spacer()
 
                 // الوقت
-                Text(status.timeText)
+                // وقت آخر قراءة فعلي من السيارة (يتحدث كل ثانية)
+                LastReadingLabel(date: recordedAt)
                     .font(AppFont.small)
-                    .foregroundStyle(.white.opacity(0.8))
+                    .foregroundStyle(.white.opacity(0.85))
             }
 
             // الأيقونة الكبيرة (تتبدل بحركة لما تتغير الحالة)
@@ -707,6 +701,6 @@ private struct DemoView: View {
 
 // MARK: - المعاينات
 #Preview("حرارة - تجربة") { DemoView() }
-#Preview("حرارة - مرتفع") { EngineTempView(temperature: 118) }
+#Preview("حرارة - مرتفع") { EngineTempView(temperature: 118, recordedAt: .now.addingTimeInterval(-5)) }
 #Preview("حرارة - طبيعي") { EngineTempView(temperature: 96) }
 #Preview("حرارة - بارد") { EngineTempView(temperature: 60) }

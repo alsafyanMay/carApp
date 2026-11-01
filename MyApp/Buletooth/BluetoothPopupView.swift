@@ -8,6 +8,10 @@ enum CarVisualStyle {
     static let success = Color(red: 143/255, green: 209/255, blue: 158/255)
     static let danger = Color(red: 242/255, green: 167/255, blue: 167/255)
     static let warning = Color(red: 224/255, green: 178/255, blue: 90/255)
+    // تجربة: بطاقة "أخضر غابي مرفوع" أفتح شوي من الخلفية عشان تبرز وتتناسق مع الأخضر
+    static let forestTop = Color(red: 42/255, green: 55/255, blue: 48/255)
+    static let forestBottom = Color(red: 31/255, green: 43/255, blue: 37/255)
+    static let forestStroke = Color(red: 62/255, green: 79/255, blue: 70/255)
     static let secondaryText = Color(red: 173/255, green: 190/255, blue: 180/255)
     static let background = LinearGradient(stops: [
         .init(color: Color(red: 0.14, green: 0.17, blue: 0.14), location: 0),
@@ -18,6 +22,8 @@ enum CarVisualStyle {
 
 struct ConnectionCard<Content: View>: View {
     var onClose: (() -> Void)? = nil
+    // ألوان "الأخضر الغابي" لكل البوب أب (غيّريها إلى false للرجوع للون القديم)
+    var elevated = true
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -37,18 +43,29 @@ struct ConnectionCard<Content: View>: View {
         }
         .padding(24)
         .frame(maxWidth: 390)
-        .background(RoundedRectangle(cornerRadius: 32).fill(CarVisualStyle.popup))
-        .overlay(RoundedRectangle(cornerRadius: 32).stroke(Color.white.opacity(0.14)))
+        .background(
+            RoundedRectangle(cornerRadius: 32).fill(
+                elevated
+                ? AnyShapeStyle(LinearGradient(colors: [CarVisualStyle.forestTop, CarVisualStyle.forestBottom],
+                                               startPoint: .top, endPoint: .bottom))
+                : AnyShapeStyle(CarVisualStyle.popup))
+        )
+        .overlay(RoundedRectangle(cornerRadius: 32)
+            .stroke(elevated ? CarVisualStyle.forestStroke : Color.white.opacity(0.14)))
         .shadow(color: .black.opacity(0.28), radius: 8, y: 4)
     }
 }
 
 struct ConnectionSteps: View {
     let steps: [String]
+    var elevated = true
     var body: some View {
         VStack(spacing: 0) {
             ForEach(Array(steps.enumerated()), id: \.offset) { index, text in
-                if index > 0 { Divider().overlay(Color.white.opacity(0.12)) }
+                if index > 0 {
+                    // خط فاصل بين كل خطوتين (مستطيل بسماكة 1 عشان يظهر دايمًا بنفس الوضوح)
+                    Rectangle().fill(Color.white.opacity(0.2)).frame(height: 1)
+                }
                 HStack(alignment: .top, spacing: 8) {
                     Text("\(index + 1).")
                     Text(text)
@@ -63,6 +80,8 @@ struct ConnectionSteps: View {
         }
         .background(RoundedRectangle(cornerRadius: 20).fill(Color.white.opacity(0.045)))
         .clipShape(RoundedRectangle(cornerRadius: 20))
+        // الخطوات من اليمين لليسار
+        .environment(\.layoutDirection, .rightToLeft)
     }
 }
 
