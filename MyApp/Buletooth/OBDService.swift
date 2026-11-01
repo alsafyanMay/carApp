@@ -7,6 +7,8 @@ final class OBDService: ObservableObject {
     @Published private(set) var vehicleData = VehicleData.load() ?? VehicleData()
     @Published private(set) var supportedPIDs: Set<UInt8> = []
     @Published private(set) var updatedAt: [UInt8: Date] = [:]
+    // 🆕 رقم هيكل السيارة (VIN) — nil لو السيارة ما أعطته
+    @Published private(set) var vin: String?
 
     private let bluetoothManager: BluetoothManager
     private var responseBuffer = ""
@@ -39,6 +41,8 @@ final class OBDService: ObservableObject {
         Task { [weak self] in
             try? await Task.sleep(for: .seconds(1))
             self?.supportedPIDs = [0x05, 0x2F, 0x42]
+            // 🆕 رقم هيكل تجريبي (تويوتا) للمحاكي
+            self?.vin = "JTDBR32E720123456"
             self?.vehicleData = VehicleData(coolantTemperature: 89, fuelLevel: 72, batteryVoltage: 12.8, rpm: 800, lastRecordedAt: Date())
             self?.vehicleData.save()
             self?.state = .ready
@@ -65,6 +69,7 @@ final class OBDService: ObservableObject {
         }
         supportedPIDs = []
         updatedAt = [:]
+        vin = nil
         state = .idle
     }
 
@@ -111,7 +116,8 @@ final class OBDService: ObservableObject {
             if supportedPIDs.isEmpty {
                 supportedPIDs = Set(readingPIDs)
             }
-            commands = readingCommands
+            // 🆕 نطلب رقم الهيكل (0902) أول، وبعدها القراءات
+            commands = ["0902"] + readingCommands
             sendNextCommand()
         case .initialRead:
             // A valid vehicle support bitmap has been received before this point.
@@ -124,8 +130,11 @@ final class OBDService: ObservableObject {
         }
     }
 
+    // ⭐ تعديل: نسأل عن القراءات الثلاث دايمًا، حتى لو السيارة ما أعلنت إنها تدعمها.
+    // بعض السيارات (خصوصًا تويوتا) ما تذكر الوقود (2F) في قائمة الدعم مع إنها ترد عليه.
+    // لو ما ردّت السيارة (NO DATA) تبقى القيمة السابقة، وما يتأثر الاتصال.
     private var readingCommands: [String] {
-        readingPIDs.filter { supportedPIDs.contains($0) }.map { String(format: "01%02X", $0) }
+        readingPIDs.map { String(format: "01%02X", $0) }
     }
 
     // MARK: - Fragmented Responses
@@ -171,6 +180,12 @@ final class OBDService: ObservableObject {
             let base = Int(command.suffix(2), radix: 16) ?? 0
             let replies = payloads(for: UInt8(base), in: upper).filter { $0.count >= 4 }
             if replies.isEmpty {
+                // ⭐ تعديل: نعيد المحاولة ونفشل الاتصال فقط لو كان الأمر الأول (0100).
+                // لو ما ردّت السيارة على 0120 أو 0140 نكمل عادي بدل ما نقطع الاتصال كامل.
+                guard command == "0100" else {
+                    sendNextCommand()
+                    return
+                }
                 if capabilitiesRetryCount < 2 {
                     capabilitiesRetryCount += 1
                     commands.insert("0100", at: 0)
@@ -196,11 +211,50 @@ final class OBDService: ObservableObject {
             if base < 0x40, bitmap & 1 != 0 {
                 commands.append(String(format: "01%02X", base + 0x20))
             }
+        } else if command == "0902" {
+            // 🆕 رد رقم الهيكل (لو السيارة ما تدعمه يرجع nil ونكمل عادي)
+            vin = parseVIN(upper)
         } else {
             let pid = UInt8(command.suffix(2), radix: 16) ?? 0
             updateReading(pid: pid, bytes: payloads(for: pid, in: upper).first ?? [])
         }
         sendNextCommand()
+    }
+
+    // 🆕 نطلع رقم الهيكل من رد 0902
+    // الرد يجي على أكثر من سطر، مثلًا (CAN):
+    //   014
+    //   0:490201 4A5444
+    //   1:424B5246 4B3330
+    //   2:30313233 343536
+    // أو (السيارات الأقدم) كل سطر يبدأ بـ 4902 ورقم ترتيبه.
+    private func parseVIN(_ response: String) -> String? {
+        var data: [UInt8] = []
+        for rawLine in lines(in: response) {
+            var line = rawLine
+            // نشيل رقم الإطار في أول السطر (مثل "0:" أو "1:")
+            if let colon = line.firstIndex(of: ":") { line = String(line[line.index(after: colon)...]) }
+            // نتجاهل سطر الطول (مثل "014") وأي سطر مو أرقام هيكس زوجية
+            guard !line.isEmpty, line.count.isMultiple(of: 2),
+                  line.allSatisfy({ $0.isHexDigit }) else { continue }
+            // نحوّل السطر لبايتات
+            var bytes: [UInt8] = []
+            var index = line.startIndex
+            while index < line.endIndex {
+                let next = line.index(index, offsetBy: 2)
+                guard let byte = UInt8(line[index..<next], radix: 16) else { break }
+                bytes.append(byte)
+                index = next
+            }
+            // لو السطر يبدأ بـ 49 02 نشيلها مع رقم الترتيب اللي بعدها
+            if bytes.count >= 3, bytes[0] == 0x49, bytes[1] == 0x02 { bytes.removeFirst(3) }
+            data += bytes
+        }
+        // نخلي الحروف والأرقام الإنجليزية الكبيرة بس (الـ VIN ما فيه غيرها)
+        let characters = data.filter { (0x30...0x39).contains($0) || (0x41...0x5A).contains($0) }
+        let text = String(decoding: characters, as: UTF8.self)
+        // الـ VIN دايمًا 17 خانة
+        return text.count >= 17 ? String(text.suffix(17)) : nil
     }
 
     private func lines(in response: String) -> [String] {
@@ -248,6 +302,8 @@ final class OBDService: ObservableObject {
             break
         }
         if received {
+            // ⭐ تعديل: لو وصلت قراءة، نعتبرها مدعومة (عشان شاشة "تم الاتصال" ما تقول "غير متاح")
+            supportedPIDs.insert(pid)
             vehicleData.lastRecordedAt = Date()
             vehicleData.save()
         }

@@ -42,6 +42,26 @@ final class BluetoothManager: NSObject, ObservableObject {
 
     func retry() { start() }
 
+    // MARK: - OBD Device Filter
+
+    // أسماء/كلمات تدل على محولات OBD الشائعة
+    private static let obdNameKeywords = [
+        "obd", "elm", "lelink", "vlink", "v-link", "vgate", "veepeak", "viecar",
+        "konnwei", "bafx", "carista", "kiwi", "icar", "lsb2", "scantool", "obdlink"
+    ]
+
+    // خدمات الإعلان المستخدمة عادة في محولات OBD (FFE0 / FFF0 / 18F0)
+    private static let obdServiceUUIDs: Set<CBUUID> = [
+        CBUUID(string: "FFE0"), CBUUID(string: "FFF0"), CBUUID(string: "18F0")
+    ]
+
+    private static func isOBDAdapter(name: String, advertisementData: [String: Any]) -> Bool {
+        let lowered = name.lowercased()
+        if obdNameKeywords.contains(where: { lowered.contains($0) }) { return true }
+        let advertised = advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID] ?? []
+        return advertised.contains(where: { obdServiceUUIDs.contains($0) })
+    }
+
     private func scan() {
         guard let centralManager, centralManager.state == .poweredOn else { return }
         state = .scanning
@@ -164,6 +184,7 @@ extension BluetoothManager: @preconcurrency CBCentralManagerDelegate {
         guard let name = advertisedName ?? peripheral.name, !name.trimmingCharacters(in: .whitespaces).isEmpty else {
             return
         }
+        guard Self.isOBDAdapter(name: name, advertisementData: advertisementData) else { return }
         peripherals[peripheral.identifier] = peripheral
         let device = OBDDevice(id: peripheral.identifier, name: name, signalStrength: RSSI.intValue)
         if let index = devices.firstIndex(where: { $0.id == device.id }) {

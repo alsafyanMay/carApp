@@ -149,7 +149,7 @@ struct DashboardView: View {
                     // حالة الاتصال
                     Text(isConnected ? "سيارتك متصلة وجاهزة للفحص" : "انقطع الاتصال بالسيارة")
                         // خط متوسط
-                        .font(.title3)
+                        .font(.system(size: 20))
                         // لون أفتح شوي
                         .foregroundStyle(.white.opacity(0.9))
                         // مسافة من فوق
@@ -157,7 +157,7 @@ struct DashboardView: View {
 
                     if !isConnected, let lastRecordedAt {
                         Text("آخر قراءة مسجلة: \(lastRecordedAt.formatted(date: .omitted, time: .shortened))")
-                            .font(.subheadline)
+                            .font(.system(size: 15))
                             .foregroundStyle(.white.opacity(0.7))
                             .padding(.top, 4)
                     }
@@ -165,7 +165,7 @@ struct DashboardView: View {
                     // لو انقطع الاتصال: زر يرجّع المستخدم يتصل من جديد
                     if !isConnected {
                         Button("إعادة الاتصال", action: onReconnect)
-                            .font(.headline)
+                            .font(.system(size: 17, weight: .semibold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 24)
                             .padding(.vertical, 10)
@@ -236,7 +236,7 @@ struct DashboardView: View {
                     // الجملة اللي في آخر الصفحة
                     Text("- رحلتك أكثر أمانًا -")
                         // خط صغير وعريض
-                        .font(.subheadline.weight(.semibold))
+                        .font(.system(size: 15, weight: .semibold))
                         // مسافة من فوق وتحت
                         .padding(.top, 50)
                         .padding(.bottom, 30)
@@ -305,7 +305,7 @@ struct DashWideCard: View {
                 // العنوان
                 Text(title)
                     // خط متوسط
-                    .font(.title3)
+                    .font(.system(size: 20))
                     // لون أفتح شوي
                     .foregroundStyle(.white.opacity(0.85))
                 // يدفع الشارة لليسار
@@ -321,13 +321,13 @@ struct DashWideCard: View {
                 // الرقم
                 Text(value)
                     // خط كبير وعريض
-                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .font(.system(size: 36, weight: .bold))
                     // يتحرك مثل العداد لما يتغير
                     .contentTransition(.numericText())
                 // الوحدة
                 Text(unit)
                     // خط صغير
-                    .font(.subheadline)
+                    .font(.system(size: 15))
                     // لون باهت
                     .foregroundStyle(.white.opacity(0.7))
             }
@@ -346,13 +346,13 @@ struct DashWideCard: View {
                 // الرسالة
                 Text(message)
                     // خط عريض
-                    .font(.headline)
+                    .font(.system(size: 17, weight: .semibold))
                 // يدفع السهم لليسار
                 Spacer()
                 // السهم
                 Image(systemName: "chevron.left")
                     // خط عريض
-                    .font(.headline)
+                    .font(.system(size: 17, weight: .semibold))
             }
         }
         // حواف داخلية
@@ -400,7 +400,7 @@ struct DashSmallCard: View {
             // العنوان بلون الخطورة
             Text(title)
                 // خط متوسط
-                .font(.headline)
+                .font(.system(size: 17, weight: .semibold))
                 // بلون الخطورة
                 .foregroundStyle(tone.color)
 
@@ -409,13 +409,13 @@ struct DashSmallCard: View {
                 // الرقم
                 Text(value)
                     // خط كبير
-                    .font(.system(size: 34, weight: .regular, design: .rounded))
+                    .font(.system(size: 34, weight: .regular))
                     // يتحرك مثل العداد
                     .contentTransition(.numericText())
                 // الوحدة
                 Text(unit)
                     // خط صغير جدًا
-                    .font(.caption2)
+                    .font(.system(size: 12))
                     // لون باهت
                     .foregroundStyle(.white.opacity(0.6))
             }
@@ -437,7 +437,7 @@ struct DashSmallCard: View {
             // السهم بلون الخطورة
             Image(systemName: "chevron.left")
                 // خط عريض
-                .font(.headline)
+                .font(.system(size: 17, weight: .semibold))
                 // بلون الخطورة
                 .foregroundStyle(tone.color)
         }
@@ -499,7 +499,7 @@ struct DashBadge: View {
             Text(text)
         }
         // خط صغير
-        .font(.caption.weight(.medium))
+        .font(.system(size: 12, weight: .medium))
         // لون أبيض
         .foregroundStyle(.white)
         // حواف داخلية

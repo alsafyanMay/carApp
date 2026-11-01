@@ -126,7 +126,7 @@ struct AcademyOnboarding: View {
         }
         .multilineTextAlignment(.leading)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 32)
+        .padding(.horizontal, 20)
         .id(page)
         .transition(pageTransition)
     }

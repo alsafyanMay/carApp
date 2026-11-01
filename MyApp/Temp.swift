@@ -63,9 +63,9 @@ private enum AppFont {
     static let small = Font.system(size: 13, weight: .regular)               // الوقت
     static let title = Font.system(size: 22, weight: .bold)                  // العنوان
     static let subtitle = Font.system(size: 15, weight: .regular)            // النص تحت العنوان
-    static let value = Font.system(size: 40, weight: .bold, design: .rounded) // الرقم الكبير
+    static let value = Font.system(size: 40, weight: .bold) // الرقم الكبير
     static let unit = Font.system(size: 18, weight: .semibold)               // الوحدة جنب الرقم
-    static let gaugeLabel = Font.system(size: 11, weight: .regular)          // عناوين الشريط
+    static let gaugeLabel = Font.system(size: 12, weight: .regular)          // عناوين الشريط
     static let warning = Font.system(size: 16, weight: .medium)              // صندوق التحذير
     static let rowTitle = Font.system(size: 18, weight: .semibold)           // "ماذا أفعل؟"
     static let rowBody = Font.system(size: 18, weight: .regular)             // الخطوات
